@@ -32,13 +32,14 @@ public class MainPageView extends BaseView<MainPagePresenter> {
         setAlignItems(Alignment.CENTER);
         H1 heading = new H1("SK Healthcare");
         heading.getStyle().set("background-color", "green").set("padding-left","7%").set("padding-top","1%")
-                .set("font-weight", "bold").set("color", "white").set("font-size","xx-larger").set("margin-top","0px");
+                .set("font-weight", "bold").set("color", "white").set("font-size","xx-larger").set("margin-top","0px")
+                .set("box-shadow","25% 25% black");
         add(heading);
         heading.setWidth(93,Unit.PERCENTAGE);
         setSizeFull();
         setPadding(false);
         getStyle().set("background-image", "url('images/Untitled.png')").set("background-repeat", "no-repeat")
-                .set("background-position", "center").set("background-size","cover");
+                .set("background-position", "center").set("background-size","cover").set("background-attachment","fixed");
         addComponents();
     }
 
@@ -49,7 +50,14 @@ public class MainPageView extends BaseView<MainPagePresenter> {
 //                .set("color","white").set("font-size","200%").set("margin-top","5%").set("padding","0% 3%").set("font-weight","bold");
 //        add(label);
 
+        Label label1 = new Label("Health is wealth");
+        label1.getStyle().set("background-image","linear-gradient(to right,rgba(255,255,255,0),rgba(255,255,255,1), rgba(255,255,255,0))").set("color", "green").set("padding-left", "45%")
+                .set("font-size","200%").set("font-weight","bold");
+        label1.setWidth(55, Unit.PERCENTAGE);
+        add(label1);
+
         Button adminButton = new Button("Admin");
+        adminButton.getStyle().set("transition","width 2s");
         adminButton.getStyle().set("background-color","white").set("font-size","120%");
         Button receptionistButton = new Button("Receptionist");
         receptionistButton.getStyle().set("background-color","white").set("font-size","120%");
@@ -105,10 +113,10 @@ public class MainPageView extends BaseView<MainPagePresenter> {
             loginLayout(adminButton.getText());
         });
 
-        Label label = new Label("Copyright @DSS");
-        label.setWidth(50, Unit.PERCENTAGE);
-        label.getStyle().set("background-color", "white").set("padding-left","50%")
-                .set("font-weight", "bold");
+        Label label = new Label("Copyright @Direction Software");
+        label.setWidth(55, Unit.PERCENTAGE);
+        label.getStyle().set("background-color", "black").set("padding-left","45%")
+                .set("font-weight", "bold").set("color","white");
         add(label);
 //        Footer footer = new Footer();
 //        footer.add(label);

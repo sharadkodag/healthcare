@@ -47,7 +47,7 @@ public class LoginView extends BaseView<LoginPresenter> {
         heading.setWidth(93,Unit.PERCENTAGE);
         setSizeFull();
         setPadding(false);
-        getStyle().set("background-image", "url('images/Untitled.png')").set("background-repeat", "no-repeat")
+        getStyle().set("b   ackground-image", "url('images/Untitled.png')").set("background-repeat", "no-repeat")
                 .set("background-position", "center").set("background-size","cover");
 
         addLayout();
@@ -80,10 +80,11 @@ public class LoginView extends BaseView<LoginPresenter> {
         tabs.add(tab, tab1);
         verticalLayout.add(tabs);
         add(verticalLayout);
-        Label label = new Label("Copyright @DSS");
-        label.setWidth(50, Unit.PERCENTAGE);
-        label.getStyle().set("background-color", "white").set("padding-left","50%")
-                .set("font-weight", "bold");
+
+        Label label = new Label("Copyright @Direction Software");
+        label.setWidth(55, Unit.PERCENTAGE);
+        label.getStyle().set("background-color", "black").set("padding-left","45%")
+                .set("font-weight", "bold").set("color", "white");
         add(label);
 
         VerticalLayout verticalLayout1 = new VerticalLayout();
@@ -98,11 +99,6 @@ public class LoginView extends BaseView<LoginPresenter> {
                 verticalLayout1.removeAll();
             }
         });
-
-    }
-
-    public void patientDetails(){
-
 
     }
 
@@ -253,6 +249,8 @@ public class LoginView extends BaseView<LoginPresenter> {
 
         return verticalLayout;
     }
+
+
 
 
 
