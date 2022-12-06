@@ -38,6 +38,8 @@ public class Doctor {
     private Department department;
     @OneToMany(mappedBy = "doctor")
     List<Patient> patientsList;
+    @OneToMany(mappedBy = "doctor")
+    List<Appointment> appointmentList;
 
     @Override
     public boolean equals(Object o) {

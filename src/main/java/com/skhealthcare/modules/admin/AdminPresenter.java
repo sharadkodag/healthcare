@@ -1,11 +1,9 @@
-package com.skhealthcare.modules.receprionist;
+package com.skhealthcare.modules.admin;
 
-import com.skhealthcare.entity.Appointment;
 import com.skhealthcare.entity.Department;
 import com.skhealthcare.entity.Doctor;
 import com.skhealthcare.entity.Patient;
 import com.skhealthcare.mvputil.BasePresenter;
-import com.skhealthcare.service.AppointmentService;
 import com.skhealthcare.service.DepartmentService;
 import com.skhealthcare.service.DoctorService;
 import com.skhealthcare.service.PatientService;
@@ -17,7 +15,7 @@ import java.util.List;
 
 @UIScope
 @SpringComponent
-public class ReceptionistPresenter extends BasePresenter<ReceptionistView> {
+public class AdminPresenter extends BasePresenter<Admin> {
 
     @Autowired
     PatientService patientService;
@@ -27,9 +25,6 @@ public class ReceptionistPresenter extends BasePresenter<ReceptionistView> {
 
     @Autowired
     DepartmentService departmentService;
-
-    @Autowired
-    AppointmentService appointmentService;
 
     public List<Patient> getAllPatient(){
         return patientService.getAllPatient();
@@ -51,17 +46,10 @@ public class ReceptionistPresenter extends BasePresenter<ReceptionistView> {
         patientService.deletePatient(patient);
     }
 
-    public void updatePatient(Patient patient){
-        patientService.updatePatient(patient);
-    }
-
     public Patient getPatientById(Integer id){
         return patientService.getPatientById(id);
     }
 
-    public List<Appointment> getAllAppointment(){
-        return appointmentService.getAllAppointment();
-    }
 
 
 }
