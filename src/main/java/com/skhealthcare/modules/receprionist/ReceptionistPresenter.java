@@ -1,4 +1,4 @@
-package com.skhealthcare.modules.login;
+package com.skhealthcare.modules.receprionist;
 
 import com.skhealthcare.entity.Department;
 import com.skhealthcare.entity.Doctor;
@@ -10,13 +10,12 @@ import com.skhealthcare.service.PatientService;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@SpringComponent
 @UIScope
-public class LoginPresenter extends BasePresenter<LoginView> {
+@SpringComponent
+public class ReceptionistPresenter extends BasePresenter<ReceptionistView> {
 
     @Autowired
     PatientService patientService;
@@ -54,5 +53,6 @@ public class LoginPresenter extends BasePresenter<LoginView> {
     public Patient getPatientById(Integer id){
         return patientService.getPatientById(id);
     }
+
 
 }

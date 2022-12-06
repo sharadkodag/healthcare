@@ -51,11 +51,7 @@ public class MainPageView extends BaseView<MainPagePresenter> {
 //                .set("color","white").set("font-size","200%").set("margin-top","5%").set("padding","0% 3%").set("font-weight","bold");
 //        add(label);
 
-        Label label1 = new Label("Health is wealth");
-        label1.getStyle().set("background-image","linear-gradient(to right,rgba(255,255,255,0),rgba(255,255,255,1), rgba(255,255,255,0))").set("color", "green").set("padding-left", "45%")
-                .set("font-size","200%").set("font-weight","bold");
-        label1.setWidth(55, Unit.PERCENTAGE);
-        add(label1);
+
 
         Button adminButton = new Button("Admin");
         adminButton.getStyle().set("background-color","white").set("font-size","120%");

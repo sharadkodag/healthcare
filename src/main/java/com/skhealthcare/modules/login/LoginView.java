@@ -3,34 +3,43 @@ package com.skhealthcare.modules.login;
 import com.skhealthcare.entity.Department;
 import com.skhealthcare.entity.Doctor;
 import com.skhealthcare.entity.Patient;
+import com.skhealthcare.modules.mainpage.MainPageView;
 import com.skhealthcare.mvputil.BaseView;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
-@Route("receptionist")
+@Route("receptionistview")
 @UIScope
 @SpringComponent
 public class LoginView extends BaseView<LoginPresenter> {
@@ -44,10 +53,24 @@ public class LoginView extends BaseView<LoginPresenter> {
     Tabs receptionistTab;
     Patient patient;
     Doctor doctor;
+    List<Patient> allPatient;
+
+    Grid<Patient> patientGrid;
+
 
     @PostConstruct
     public void init(){
-        removeAll();
+        addHeading();
+        verticalLayout = new VerticalLayout();
+        verticalLayout.setSizeFull();
+        verticalLayout.getStyle().set("background-color","white");
+        addUserDetails();
+        addLayout();
+        receptionistTab();
+        addFooter();
+    }
+
+    public void addHeading(){
         setPadding(false);
         setAlignItems(Alignment.CENTER);
         H1 heading = new H1("SK Healthcare");
@@ -60,10 +83,35 @@ public class LoginView extends BaseView<LoginPresenter> {
         getStyle().set("background-image", "url('images/Untitled.png')").set("background-repeat", "no-repeat")
                 .set("background-position", "center").set("background-size","cover");
 
-        verticalLayout = new VerticalLayout();
-        verticalLayout.setSizeFull();
-        verticalLayout.getStyle().set("background-color","white");
-        addLayout();
+    }
+
+    public void addUserDetails(){
+        HorizontalLayout horizontalLayout = new HorizontalLayout();
+        Icon icon = VaadinIcon.USER_CARD.create();
+
+        icon.addClickListener(event -> {
+            Dialog dialog = new Dialog();
+            TextField nameField = new TextField("Name");
+            TextField addressField = new TextField("Address");
+            Button logout = new Button("Logout");
+            VerticalLayout verticalLayout1 = new VerticalLayout();
+
+            dialog.open();
+            nameField.setEnabled(false);
+            addressField.setEnabled(false);
+
+            logout.addClickListener(e -> {
+                logout.getUI().ifPresent(u -> u.navigate(MainPageView.class));
+            });
+
+            verticalLayout1.add(nameField, addressField, logout);
+            dialog.add(verticalLayout1);
+        });
+
+        horizontalLayout.getStyle().set("padding-left","95%");
+
+        horizontalLayout.add(icon);
+        add(horizontalLayout);
     }
 
     public void addLayout(){
@@ -74,16 +122,14 @@ public class LoginView extends BaseView<LoginPresenter> {
         label.setWidth(60, Unit.PERCENTAGE);
         add(label);
 
-//        receptionistTab();
-        addDoctorLoginTabs();
+    }
 
-
+    public void addFooter(){
         Label footer = new Label("Copyright @Direction Software");
         footer.setWidth(55, Unit.PERCENTAGE);
         footer.getStyle().set("background-color", "black").set("padding-left","45%")
                 .set("font-weight", "bold").set("color", "white");
         add(footer);
-
     }
 
     public void receptionistTab(){
@@ -105,40 +151,13 @@ public class LoginView extends BaseView<LoginPresenter> {
                 verticalLayout1.add(addPatientFields());
             }else if (event.getSelectedTab().equals(tab1)){
                 verticalLayout1.removeAll();
+                verticalLayout1.add(addDoctorDetails());
             }
         });
 
         add(verticalLayout);
 
     }
-
-    public void addDoctorLoginTabs(){
-        verticalLayout.removeAll();
-
-        doctorTabs = new Tabs();
-        Tab tab = new Tab("Appointments");
-        Tab tab1 = new Tab("Patient Details");
-
-        doctorTabs.add(tab, tab1);
-
-        VerticalLayout verticalLayout1 = new VerticalLayout();
-
-        doctorTabs.addSelectedChangeListener(event -> {
-            if(event.getSelectedTab().equals(tab)){
-                verticalLayout1.removeAll();
-                verticalLayout1.add();
-            }else if(event.getSelectedTab().equals(tab1)){
-                verticalLayout1.removeAll();
-                verticalLayout1.add(addPatientFields());
-            }
-        });
-
-        verticalLayout.add(doctorTabs,verticalLayout1);
-
-        add(verticalLayout);
-
-    }
-
 
     public VerticalLayout addPatientFields(){
 
@@ -178,18 +197,27 @@ public class LoginView extends BaseView<LoginPresenter> {
         binder.forField(mobileField).withValidator(s-> s.length() == 10,"Please enter valid number")
                 .bind(Patient::getMobileNumber, Patient::setMobileNumber);
 
-        Grid<Patient> patientGrid = new Grid<>();
-        if(loginPresenter.getAllPatient()!=null) {
-            patientGrid.setItems(loginPresenter.getAllPatient());
+        patientGrid = new Grid<>();
+
+        allPatient = loginPresenter.getAllPatient();
+        if(allPatient !=null) {
+            patientGrid.setItems(allPatient);
         }
         Grid.Column<Patient> nameColumn = patientGrid.addColumn(Patient::getFullName).setHeader("Name");
         Grid.Column<Patient> addressColumn = patientGrid.addColumn(Patient::getAddress).setHeader("Address");
-        Grid.Column<Patient> doctorNameColumn = patientGrid.addColumn(Patient::getDoctor).setHeader("Doctor Name");
+        Grid.Column<Patient> doctorNameColumn = patientGrid.addColumn(p ->{
+            return p.getDoctor().getFirstName() + " " + p.getDoctor().getLastName();
+        }).setHeader("Doctor Name");
         Grid.Column<Patient> departmentColumn = patientGrid.addColumn(p -> {
-            Doctor doctor = p.getDoctor();
-            return doctor.getDepartment();
+            return p.getDoctor().getDepartment().getDeptName();
         }).setHeader("Department");
         HeaderRow headerRow = patientGrid.appendHeaderRow();
+
+        patientGrid.addSelectionListener(event -> {
+            Set<Patient> allSelectedItems = event.getAllSelectedItems();
+            Iterator<Patient> iterator = allSelectedItems.iterator();
+            binder.readBean(iterator.next());
+        });
 
         TextField nameFilter = new TextField();
         nameFilter.setPlaceholder("Name");
@@ -200,11 +228,27 @@ public class LoginView extends BaseView<LoginPresenter> {
             doctorFilter.setItems(loginPresenter.getAllDoctor());
         }
         doctorFilter.setPlaceholder("Doctor");
+        doctorFilter.setItemLabelGenerator(d ->{
+            return d.getFirstName() + " " + d.getLastName();
+        });
         ComboBox<Department> departmentFilter = new ComboBox<>();
         departmentFilter.setPlaceholder("Department");
         if (loginPresenter.getAllDepartment()!=null) {
             departmentFilter.setItems(loginPresenter.getAllDepartment());
         }
+        departmentFilter.setItemLabelGenerator(l ->{
+            return l.getDeptName();
+        });
+
+        nameFilter.setValueChangeMode(ValueChangeMode.LAZY);
+        addressFilter.setValueChangeMode(ValueChangeMode.LAZY);
+//        doctorFilter.setValueChangeMode(ValueChangeMode.LAZY);
+//        departmentFilter.setValueChangeMode(ValueChangeMode.LAZY);
+
+        nameFilter.addValueChangeListener(e -> getPatientFilter(patientGrid, nameFilter, addressFilter, departmentFilter, doctorFilter));
+        addressFilter.addValueChangeListener(e -> getPatientFilter(patientGrid, nameFilter, addressFilter, departmentFilter, doctorFilter));
+        doctorFilter.addValueChangeListener(e -> getPatientFilter(patientGrid, nameFilter, addressFilter, departmentFilter, doctorFilter));
+        departmentFilter.addValueChangeListener(e -> getPatientFilter(patientGrid, nameFilter, addressFilter, departmentFilter, doctorFilter));
 
         headerRow.getCell(nameColumn).setComponent(nameFilter);
         headerRow.getCell(addressColumn).setComponent(addressFilter);
@@ -231,9 +275,11 @@ public class LoginView extends BaseView<LoginPresenter> {
 
         HorizontalLayout horizontalLayout1 = new HorizontalLayout();
         VerticalLayout verticalLayout1 = new VerticalLayout();
-        verticalLayout1.setSizeFull();
+        verticalLayout1.setHeightFull();
+        verticalLayout1.setWidth(65, Unit.PERCENTAGE);
         VerticalLayout verticalLayout2 = new VerticalLayout();
-        verticalLayout2.setSizeFull();
+        verticalLayout2.setHeightFull();
+        verticalLayout2.setWidth(35, Unit.PERCENTAGE);
         verticalLayout1.add(patientGrid);
         FormLayout formLayout = new FormLayout();
         formLayout.add(idField, nameField, addressField,ageField, mobileField,doctorComboBox);
@@ -245,6 +291,7 @@ public class LoginView extends BaseView<LoginPresenter> {
 
         addButton.addClickListener(event -> {
             binder.removeBean();
+            binder.readBean(new Patient());
             save.setVisible(true);
             cancel.setVisible(true);
             formLayout.add(save,cancel);
@@ -256,7 +303,8 @@ public class LoginView extends BaseView<LoginPresenter> {
         });
 
         editButton.addClickListener(event -> {
-            if(doctorTabs.getSelectedTab()!=null || receptionistTab!=null){
+            Set<Patient> selectedItems = patientGrid.getSelectedItems();
+            if(!selectedItems.isEmpty()){
 
                 save.setVisible(true);
                 cancel.setVisible(true);
@@ -266,6 +314,9 @@ public class LoginView extends BaseView<LoginPresenter> {
                 addressField.setEnabled(true);
                 mobileField.setEnabled(true);
                 doctorComboBox.setEnabled(true);
+            }else {
+                Notification notification = Notification.show("Please select patient", 3000, Notification.Position.TOP_CENTER);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
 
         });
@@ -281,7 +332,24 @@ public class LoginView extends BaseView<LoginPresenter> {
                 } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
-                loginPresenter.addPatient(bean);
+                if(idField.getValue()!=null){
+                    Patient patientById = loginPresenter.getPatientById(idField.getValue());
+                    try {
+                        binder.writeBean(patientById);
+                        loginPresenter.addPatient(patientById);
+                        for(Patient patient1 : allPatient){
+                            if(patient1.getId()== patientById.getId()){
+                                allPatient.set(allPatient.indexOf(patient1),patientById);
+                            }
+                        }
+                    } catch (ValidationException e) {
+                        throw new RuntimeException(e);
+                    }
+                }else {
+                    loginPresenter.addPatient(bean);
+                    allPatient.add(bean);
+                }
+                patientGrid.getDataProvider().refreshAll();
                 Notification.show("Patient Added", 2000, Notification.Position.TOP_CENTER);
 
                 save.setVisible(false);
@@ -293,9 +361,6 @@ public class LoginView extends BaseView<LoginPresenter> {
                 mobileField.setEnabled(false);
                 doctorComboBox.setEnabled(false);
             }
-
-
-
         });
         cancel.addClickListener(event -> {
             save.setVisible(false);
@@ -307,9 +372,138 @@ public class LoginView extends BaseView<LoginPresenter> {
             mobileField.setEnabled(false);
             doctorComboBox.setEnabled(false);
         });
-
-
+        deleteButton.addClickListener(event -> {
+            Set<Patient> selectedItems = patientGrid.getSelectedItems();
+            if(!selectedItems.isEmpty()){
+                Iterator<Patient> iterator = selectedItems.iterator();
+                patient = iterator.next();
+                loginPresenter.deletePatient(patient);
+                allPatient.remove(patient);
+                Notification notification = Notification.show("Patient deleted successfully", 3000, Notification.Position.TOP_CENTER);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                patientGrid.getDataProvider().refreshAll();
+            }
+            else {
+                Notification notification = Notification.show("Please select patient", 3000, Notification.Position.TOP_CENTER);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
         return verticalLayout;
     }
+
+    private void getPatientFilter(Grid<Patient> patientGrid, TextField nameFilter, TextField addressFilter,
+                                  ComboBox<Department> departmentFilter, ComboBox<Doctor> doctorFilter) {
+
+        ListDataProvider<Patient> dataProvider = (ListDataProvider<Patient>) patientGrid.getDataProvider();
+        dataProvider.setFilter(e ->{
+            boolean b1 = e.getFullName().toLowerCase().contains(nameFilter.getValue().toLowerCase());
+            boolean b2 = e.getAddress().toLowerCase().contains(addressFilter.getValue().toLowerCase());
+            boolean b3 = e.getDoctor().getDepartment().getDeptName().equals((departmentFilter.getValue()==null) ? null : departmentFilter.getValue().getDeptName());
+            boolean b4 = e.getDoctor().getFirstName().equals(doctorFilter.getValue()==null ? null : doctorFilter.getValue().getFirstName())
+                    || e.getDoctor().getLastName().equals(doctorFilter.getValue() == null ? null : doctorFilter.getValue().getLastName());
+
+            if(departmentFilter.getValue()== null || doctorFilter.getValue()==null){
+                if(departmentFilter.getValue()== null && doctorFilter.getValue()==null){
+                    return b1 && b2;
+                }else if(doctorFilter.getValue()==null){
+                    return b1 && b2 && b3;
+                }else {
+                    return b1 && b2 && b4;
+                }
+            }
+            return b1 && b2 && b3 && b4;
+
+        });
+
+    }
+
+    public VerticalLayout addDoctorDetails(){
+
+        VerticalLayout verticalLayout1 = new VerticalLayout();
+        Grid<Doctor> doctorGrid = new Grid<>();
+        doctorGrid.setItems(loginPresenter.getAllDoctor());
+        Grid.Column<Doctor> firstName = doctorGrid.addColumn(Doctor::getFirstName).setHeader("First name");
+        Grid.Column<Doctor> lastName = doctorGrid.addColumn(Doctor::getLastName).setHeader("Last Name");
+        Grid.Column<Doctor> education = doctorGrid.addColumn(Doctor::getEducation).setHeader("Education");
+        Grid.Column<Doctor> gender = doctorGrid.addColumn(Doctor::getGender).setHeader("Gender");
+        Grid.Column<Doctor> mobileNumber = doctorGrid.addColumn(Doctor::getMobileNumber).setHeader("Mobile Number");
+        Grid.Column<Doctor> bloodGroup = doctorGrid.addColumn(Doctor::getBloodGroup).setHeader("Blood Group");
+        Grid.Column<Doctor> department = doctorGrid.addColumn(e -> e.getDepartment().getDeptName()).setHeader("Department");
+
+        TextField firstnameField = new TextField();
+        TextField lastNameField = new TextField();
+        TextField educationField = new TextField();
+        TextField genderField= new TextField();
+        TextField mobileField = new TextField();
+        TextField bloodGroupField = new TextField();
+        TextField departmentField = new TextField();
+
+        firstnameField.setPlaceholder("First Name");
+        lastNameField.setPlaceholder("Last Name");
+        educationField.setPlaceholder("Education");
+        genderField.setPlaceholder("Gender");
+        mobileField.setPlaceholder("Mobile Number");
+        bloodGroupField.setPlaceholder("Blood Group");
+        departmentField.setPlaceholder("Department");
+
+        firstnameField.setValueChangeMode(ValueChangeMode.LAZY);
+        lastNameField.setValueChangeMode(ValueChangeMode.LAZY);
+        educationField.setValueChangeMode(ValueChangeMode.LAZY);
+        bloodGroupField.setValueChangeMode(ValueChangeMode.LAZY);
+        genderField.setValueChangeMode(ValueChangeMode.LAZY);
+        mobileField.setValueChangeMode(ValueChangeMode.LAZY);
+        departmentField.setValueChangeMode(ValueChangeMode.LAZY);
+
+        HeaderRow headerRow = doctorGrid.appendHeaderRow();
+        headerRow.getCell(firstName).setComponent(firstnameField);
+        headerRow.getCell(lastName).setComponent(lastNameField);
+        headerRow.getCell(education).setComponent(educationField);
+        headerRow.getCell(gender).setComponent(genderField);
+        headerRow.getCell(mobileNumber).setComponent(mobileField);
+        headerRow.getCell(bloodGroup).setComponent(bloodGroupField);
+        headerRow.getCell(department).setComponent(departmentField);
+
+        verticalLayout1.add(doctorGrid);
+        verticalLayout1.setSizeFull();
+
+        firstnameField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+                genderField,mobileField,bloodGroupField,departmentField));
+        lastNameField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+                genderField,mobileField,bloodGroupField,departmentField));
+        genderField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+                genderField,mobileField,bloodGroupField,departmentField));
+        bloodGroupField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+                genderField,mobileField,bloodGroupField,departmentField));
+        departmentField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+                genderField,mobileField,bloodGroupField,departmentField));
+        educationField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+                genderField,mobileField,bloodGroupField,departmentField));
+        mobileField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+                genderField,mobileField,bloodGroupField,departmentField));
+
+        return verticalLayout1;
+
+    }
+
+    public void getDoctorFilter(Grid<Doctor> doctorGrid, TextField firstnameField, TextField lastNameField, TextField educationField, TextField genderField,
+                                TextField mobileField, TextField bloodGroupField, TextField departmentField){
+
+        ListDataProvider<Doctor> dataProvider = (ListDataProvider)doctorGrid.getDataProvider();
+        dataProvider.setFilter(e -> {
+
+            Boolean b1 = e.getFirstName().toLowerCase().contains(firstnameField.getValue().toLowerCase());
+            Boolean b2 = e.getLastName().toLowerCase().contains(lastNameField.getValue().toLowerCase());
+            Boolean b3 = e.getEducation().toLowerCase().contains(educationField.getValue().toLowerCase());
+            Boolean b4 = e.getGender().toLowerCase().contains(genderField.getValue().toLowerCase());
+            Boolean b5 = e.getMobileNumber().toLowerCase().contains(mobileField.getValue().toLowerCase());
+            Boolean b6 = e.getBloodGroup().toLowerCase().contains(bloodGroupField.getValue().toLowerCase());
+            Boolean b7 = e.getDepartment().getDeptName().toLowerCase().contains(departmentField.getValue().toLowerCase());
+
+            return b1 && b2 && b3 && b4 && b6 && b7 && b5;
+
+        });
+
+    }
+
 
 }
