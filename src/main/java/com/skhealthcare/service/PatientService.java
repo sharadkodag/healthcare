@@ -9,5 +9,6 @@ import java.util.List;
 public interface PatientService {
 
     public List<Patient> getAllPatient();
+    public void addPatient(Patient patient);
 
 }

@@ -12,6 +12,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
@@ -20,12 +21,14 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
+import java.util.Objects;
 
 @Route("receptionist")
 @UIScope
@@ -34,6 +37,13 @@ public class LoginView extends BaseView<LoginPresenter> {
 
     @Autowired
     LoginPresenter loginPresenter;
+
+    VerticalLayout verticalLayout;
+    Binder<Patient> binder;
+    Tabs doctorTabs;
+    Tabs receptionistTab;
+    Patient patient;
+    Doctor doctor;
 
     @PostConstruct
     public void init(){
@@ -47,9 +57,12 @@ public class LoginView extends BaseView<LoginPresenter> {
         heading.setWidth(93,Unit.PERCENTAGE);
         setSizeFull();
         setPadding(false);
-        getStyle().set("b   ackground-image", "url('images/Untitled.png')").set("background-repeat", "no-repeat")
+        getStyle().set("background-image", "url('images/Untitled.png')").set("background-repeat", "no-repeat")
                 .set("background-position", "center").set("background-size","cover");
 
+        verticalLayout = new VerticalLayout();
+        verticalLayout.setSizeFull();
+        verticalLayout.getStyle().set("background-color","white");
         addLayout();
     }
 
@@ -61,37 +74,32 @@ public class LoginView extends BaseView<LoginPresenter> {
         label.setWidth(60, Unit.PERCENTAGE);
         add(label);
 
-        receptionistTab();
+//        receptionistTab();
+        addDoctorLoginTabs();
+
+
+        Label footer = new Label("Copyright @Direction Software");
+        footer.setWidth(55, Unit.PERCENTAGE);
+        footer.getStyle().set("background-color", "black").set("padding-left","45%")
+                .set("font-weight", "bold").set("color", "white");
+        add(footer);
 
     }
 
     public void receptionistTab(){
-        VerticalLayout verticalLayout = new VerticalLayout();
-        verticalLayout.setSizeFull();
-        verticalLayout.getStyle().set("background-color","white");
+        verticalLayout.removeAll();
 
-        Tabs tabs = new Tabs();
-        tabs.setWidthFull();
-        tabs.getStyle().set("background-color", "white");
+        receptionistTab = new Tabs();
         Tab tab = new Tab("Patient Details");
-        tab.getStyle().set("background-color","white");
         Tab tab1 = new Tab("Doctor Details");
-        tab.getStyle().set("background-color","white");
-        tabs.add(tab, tab1);
-        verticalLayout.add(tabs);
-        add(verticalLayout);
-
-        Label label = new Label("Copyright @Direction Software");
-        label.setWidth(55, Unit.PERCENTAGE);
-        label.getStyle().set("background-color", "black").set("padding-left","45%")
-                .set("font-weight", "bold").set("color", "white");
-        add(label);
+        receptionistTab.add(tab, tab1);
+        verticalLayout.add(receptionistTab);
 
         VerticalLayout verticalLayout1 = new VerticalLayout();
         verticalLayout1.add(addPatientFields());
 
         verticalLayout.add(verticalLayout1);
-        tabs.addSelectedChangeListener(event -> {
+        receptionistTab.addSelectedChangeListener(event -> {
             if(event.getSelectedTab().equals(tab)){
                 verticalLayout1.removeAll();
                 verticalLayout1.add(addPatientFields());
@@ -100,7 +108,37 @@ public class LoginView extends BaseView<LoginPresenter> {
             }
         });
 
+        add(verticalLayout);
+
     }
+
+    public void addDoctorLoginTabs(){
+        verticalLayout.removeAll();
+
+        doctorTabs = new Tabs();
+        Tab tab = new Tab("Appointments");
+        Tab tab1 = new Tab("Patient Details");
+
+        doctorTabs.add(tab, tab1);
+
+        VerticalLayout verticalLayout1 = new VerticalLayout();
+
+        doctorTabs.addSelectedChangeListener(event -> {
+            if(event.getSelectedTab().equals(tab)){
+                verticalLayout1.removeAll();
+                verticalLayout1.add();
+            }else if(event.getSelectedTab().equals(tab1)){
+                verticalLayout1.removeAll();
+                verticalLayout1.add(addPatientFields());
+            }
+        });
+
+        verticalLayout.add(doctorTabs,verticalLayout1);
+
+        add(verticalLayout);
+
+    }
+
 
     public VerticalLayout addPatientFields(){
 
@@ -119,20 +157,26 @@ public class LoginView extends BaseView<LoginPresenter> {
         ComboBox<Doctor> doctorComboBox = new ComboBox<>();
         doctorComboBox.setEnabled(false);
         doctorComboBox.setLabel("Doctor");
+        doctorComboBox.setItems(loginPresenter.getAllDoctor());
         doctorComboBox.setItemLabelGenerator(d -> {
-            return d.getFirstName() + " " + d.getLastName() + " (" + d.getDepartment() + ")";
+            return d.getFirstName() + " " + d.getLastName() + " (" + d.getDepartment().getDeptName() + ")";
         });
-        TextField mobileField = new TextField("Address");
+        TextField mobileField = new TextField("Mobile Number");
         mobileField.setEnabled(false);
 
-        Binder<Patient> binder = new Binder<>();
+        binder = new Binder<>();
         binder.setBean(new Patient());
         binder.forField(idField).bind(Patient::getId, Patient::setAge);
-        binder.forField(addressField).bind(Patient::getAddress, Patient::setAddress);
-        binder.forField(ageField).bind(Patient::getAge, Patient::setAge);
-        binder.forField(nameField).bind(Patient::getFullName, Patient::setFullName);
-        binder.forField(doctorComboBox).bind(Patient::getDoctor, Patient::setDoctor);
-        binder.forField(mobileField).bind(Patient::getMobileNumber, Patient::setMobileNumber);
+        binder.forField(addressField).withValidator(s->!s.equals(""),"Please enter address")
+                .bind(Patient::getAddress, Patient::setAddress);
+        binder.forField(ageField).withValidator(Objects::nonNull,"Please enter age")
+                .bind(Patient::getAge, Patient::setAge);
+        binder.forField(nameField).withValidator(s->!s.equals(""),"Please enter name")
+                .bind(Patient::getFullName, Patient::setFullName);
+        binder.forField(doctorComboBox).withValidator(Objects::nonNull,"Please select")
+                .bind(Patient::getDoctor, Patient::setDoctor);
+        binder.forField(mobileField).withValidator(s-> s.length() == 10,"Please enter valid number")
+                .bind(Patient::getMobileNumber, Patient::setMobileNumber);
 
         Grid<Patient> patientGrid = new Grid<>();
         if(loginPresenter.getAllPatient()!=null) {
@@ -204,7 +248,6 @@ public class LoginView extends BaseView<LoginPresenter> {
             save.setVisible(true);
             cancel.setVisible(true);
             formLayout.add(save,cancel);
-            idField.setEnabled(true);
             nameField.setEnabled(true);
             ageField.setEnabled(true);
             addressField.setEnabled(true);
@@ -213,33 +256,51 @@ public class LoginView extends BaseView<LoginPresenter> {
         });
 
         editButton.addClickListener(event -> {
-            save.setVisible(true);
-            cancel.setVisible(true);
-            formLayout.add(save,cancel);
-            idField.setEnabled(true);
-            nameField.setEnabled(true);
-            ageField.setEnabled(true);
-            addressField.setEnabled(true);
-            mobileField.setEnabled(true);
-            doctorComboBox.setEnabled(true);
+            if(doctorTabs.getSelectedTab()!=null || receptionistTab!=null){
+
+                save.setVisible(true);
+                cancel.setVisible(true);
+                formLayout.add(save,cancel);
+                nameField.setEnabled(true);
+                ageField.setEnabled(true);
+                addressField.setEnabled(true);
+                mobileField.setEnabled(true);
+                doctorComboBox.setEnabled(true);
+            }
+
         });
 
         save.addClickListener(event -> {
-            save.setVisible(false);
-            cancel.setVisible(false);
-            formLayout.remove(save,cancel);
-            idField.setEnabled(false);
-            nameField.setEnabled(false);
-            ageField.setEnabled(false);
-            addressField.setEnabled(false);
-            mobileField.setEnabled(false);
-            doctorComboBox.setEnabled(false);
+
+            binder.validate();
+
+            if(binder.isValid()){
+                Patient bean = new Patient();
+                try {
+                    binder.writeBean(bean);
+                } catch (ValidationException e) {
+                    throw new RuntimeException(e);
+                }
+                loginPresenter.addPatient(bean);
+                Notification.show("Patient Added", 2000, Notification.Position.TOP_CENTER);
+
+                save.setVisible(false);
+                cancel.setVisible(false);
+                formLayout.remove(save,cancel);
+                nameField.setEnabled(false);
+                ageField.setEnabled(false);
+                addressField.setEnabled(false);
+                mobileField.setEnabled(false);
+                doctorComboBox.setEnabled(false);
+            }
+
+
+
         });
         cancel.addClickListener(event -> {
             save.setVisible(false);
             cancel.setVisible(false);
             formLayout.remove(save,cancel);
-            idField.setEnabled(false);
             nameField.setEnabled(false);
             ageField.setEnabled(false);
             addressField.setEnabled(false);
@@ -247,11 +308,8 @@ public class LoginView extends BaseView<LoginPresenter> {
             doctorComboBox.setEnabled(false);
         });
 
+
         return verticalLayout;
     }
-
-
-
-
 
 }

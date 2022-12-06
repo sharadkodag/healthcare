@@ -1,5 +1,6 @@
 package com.skhealthcare.modules.mainpage;
 
+import com.skhealthcare.modules.login.LoginView;
 import com.skhealthcare.mvputil.BaseView;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -57,7 +58,6 @@ public class MainPageView extends BaseView<MainPagePresenter> {
         add(label1);
 
         Button adminButton = new Button("Admin");
-        adminButton.getStyle().set("transition","width 2s");
         adminButton.getStyle().set("background-color","white").set("font-size","120%");
         Button receptionistButton = new Button("Receptionist");
         receptionistButton.getStyle().set("background-color","white").set("font-size","120%");
@@ -147,6 +147,11 @@ public class MainPageView extends BaseView<MainPagePresenter> {
         PasswordField passwordField = new PasswordField("Password");
         Button login = new Button("Login");
         login.getStyle().set("background-color","green").set("color","white");
+
+        login.addClickListener(event -> {
+            dialog.close();
+            login.getUI().ifPresent(e -> e.navigate(LoginView.class));
+        });
 
         formLayout.setColspan(username,2);
         formLayout.setColspan(passwordField,2);
