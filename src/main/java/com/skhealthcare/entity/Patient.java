@@ -9,7 +9,6 @@ import java.util.Objects;
 @Entity
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 public class Patient {
