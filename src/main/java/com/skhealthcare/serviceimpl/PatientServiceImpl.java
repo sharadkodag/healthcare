@@ -18,4 +18,11 @@ public class PatientServiceImpl implements PatientService {
     public List<Patient> getAllPatient() {
         return patientRepository.findAll();
     }
+
+    @Override
+    public void addPatient(Patient patient) {
+        patientRepository.save(patient);
+    }
+
+
 }

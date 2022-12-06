@@ -39,4 +39,8 @@ public class LoginPresenter extends BasePresenter<LoginView> {
         return departmentService.getAllDepartment();
     }
 
+    public void addPatient(Patient patient){
+        patientService.addPatient(patient);
+    }
+
 }
