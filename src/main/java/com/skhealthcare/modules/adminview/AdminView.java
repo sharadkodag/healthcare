@@ -1,10 +1,10 @@
-package com.skhealthcare.modules.receprionist;
+package com.skhealthcare.modules.adminview;
 
 import com.skhealthcare.entity.Appointment;
 import com.skhealthcare.entity.Department;
-import com.skhealthcare.entity.Doctor;
+import com.skhealthcare.entity.Staff;
 import com.skhealthcare.entity.Patient;
-import com.skhealthcare.modules.homepage.Template;
+import com.skhealthcare.modules.homeview.Template;
 import com.skhealthcare.mvputil.BaseView;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -20,7 +20,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
@@ -36,21 +35,26 @@ import java.util.*;
 
 @UIScope
 @SpringComponent
-@Route(value = "receptionist", layout = Template.class)
-public class ReceptionistView extends BaseView<ReceptionistPresenter> {
+@Route(value = "admin", layout = Template.class)
+public class AdminView extends BaseView<AdminPresenter> {
 
     @Autowired
-    ReceptionistPresenter receptionistPresenter;
+    AdminPresenter adminPresenter;
 
     VerticalLayout tabsLayout;
-    HorizontalLayout buttonLayout;
+    HorizontalLayout patientButtonLayout;
+    HorizontalLayout appointmentButtonLayout;
     HorizontalLayout gridAndFieldsLayout;
 
     VerticalLayout patientGridLayout;
+    VerticalLayout appointmentGridLayout;
     VerticalLayout patientFieldsLayout;
+    VerticalLayout appointmentFieldLayout;
     Tabs tabs;
     Tab patientDetails;
     Tab doctorDetails;
+    Tab appointmentDetails;
+    Tab addAppointment;
     Button addButton;
     Button editButton;
     Button deleteButton;
@@ -61,7 +65,7 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
     List<Patient> allPatient;
     TextField nameFilter;
     TextField addressFilter;
-    ComboBox<Doctor> doctorFilter;
+    ComboBox<Staff> doctorFilter;
     ComboBox<Department> departmentFilter;
     Grid<Appointment> appointmentGrid;
     List<Appointment> appointmentList;
@@ -72,10 +76,15 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
         tabsLayout = new VerticalLayout();
         tabs = new Tabs();
         patientDetails = new Tab();
+        appointmentDetails = new Tab();
+        addAppointment = new Tab();
         gridAndFieldsLayout = new HorizontalLayout();
         patientGridLayout = new VerticalLayout();
         patientFieldsLayout = new VerticalLayout();
-        buttonLayout = new HorizontalLayout();
+        appointmentGridLayout = new VerticalLayout();
+        appointmentFieldLayout = new VerticalLayout();
+        patientButtonLayout = new HorizontalLayout();
+        appointmentButtonLayout = new HorizontalLayout();
         addButton = new Button("Add");
         editButton = new Button("Edit");
         deleteButton = new Button("Delete");
@@ -95,13 +104,18 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
 
         setMargin(false);
         setPadding(false);
+        setSizeFull();
+
+        appointmentFieldLayout.setSizeFull();
+        appointmentFieldLayout.getStyle().set("background-color","white");
+        appointmentButtonLayout.setVisible(false);
 
         addLayout();
         addMenuBarLayout();
     }
 
     public void addLayout(){
-        Label label = new Label("Receptionist Portal");
+        Label label = new Label("Admin Portal");
 
         label.getStyle().set("background-color", "blue").set("padding-left","45%")
                 .set("color","white").set("font-weight", "bold").set("font-size", "xx-large");
@@ -113,6 +127,8 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
     public void addMenuBarLayout(){
         patientDetails.setLabel("Patient Details");
         doctorDetails.setLabel("Doctor Details");
+        addAppointment.setLabel("Add Appointment");
+        appointmentDetails.setLabel("Appointment Details");
 
         tabsLayout.setSizeFull();
         tabsLayout.getStyle().set("background-color", "white");
@@ -126,10 +142,9 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
         saveButton.getStyle().set("color", "white").set("background-color","green");
         cancelButton.getStyle().set("color","white").set("background-color","red");
 
-        tabsLayout.add(tabs,buttonLayout,gridAndFieldsLayout);
-        tabs.add(patientDetails);
-        tabs.add(doctorDetails);
-        buttonLayout.add(addButton, editButton, deleteButton);
+        tabsLayout.add(tabs, patientButtonLayout,appointmentButtonLayout,gridAndFieldsLayout);
+        tabs.add(patientDetails,doctorDetails,addAppointment,appointmentDetails);
+        patientButtonLayout.add(addButton, editButton, deleteButton);
         gridAndFieldsLayout.add(patientGridLayout, patientFieldsLayout);
         add(tabsLayout);
 
@@ -138,22 +153,36 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
         tabs.addSelectedChangeListener(event -> {
             if(event.getSelectedTab().equals(patientDetails)){
                 gridAndFieldsLayout.removeAll();
-                buttonLayout.setVisible(true);
+                patientButtonLayout.setVisible(true);
+                appointmentButtonLayout.setVisible(false);
                 gridAndFieldsLayout.add(patientGridLayout, patientFieldsLayout);
             }else if(event.getSelectedTab().equals(doctorDetails)){
                 gridAndFieldsLayout.removeAll();
-                buttonLayout.setVisible(false);
+                patientButtonLayout.setVisible(false);
+                appointmentButtonLayout.setVisible(false);
                 gridAndFieldsLayout.add(addDoctorDetails());
+            }else if (event.getSelectedTab().equals(appointmentDetails)){
+                gridAndFieldsLayout.removeAll();
+                patientButtonLayout.setVisible(false);
+                appointmentButtonLayout.setVisible(true);
+                gridAndFieldsLayout.add(appointmentGridLayout);
+            }else if(event.getSelectedTab().equals(addAppointment)){
+                gridAndFieldsLayout.removeAll();
+                patientButtonLayout.setVisible(false);
+                appointmentButtonLayout.setVisible(false);
+                gridAndFieldsLayout.add(appointmentFieldLayout);
             }
         });
 
         addGridLayout();
         addFieldLayout();
+        addAppointmentGridLayout();
+        addAppointmentFieldLayout();
     }
 
     public void addGridLayout(){
 
-        allPatient = receptionistPresenter.getAllPatient();
+        allPatient = adminPresenter.getAllPatient();
         if(allPatient !=null) {
             patientGrid.setItems(allPatient);
         }
@@ -183,11 +212,11 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
             return d.getFirstName() + " " + d.getLastName();
         });
 
-        if (receptionistPresenter.getAllDoctor()!=null) {
-            doctorFilter.setItems(receptionistPresenter.getAllDoctor());
+        if (adminPresenter.getAllDoctor()!=null) {
+            doctorFilter.setItems(adminPresenter.getAllDoctor());
         }
-        if (receptionistPresenter.getAllDepartment()!=null) {
-            departmentFilter.setItems(receptionistPresenter.getAllDepartment());
+        if (adminPresenter.getAllDepartment()!=null) {
+            departmentFilter.setItems(adminPresenter.getAllDepartment());
         }
 
         departmentFilter.setItemLabelGenerator(Department::getDeptName);
@@ -238,7 +267,7 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
         TextField addressField = new TextField("Address");
         IntegerField ageField = new IntegerField("Age");
         TextField nameField = new TextField("Name");
-        ComboBox<Doctor> doctorComboBox = new ComboBox<>();
+        ComboBox<Staff> doctorComboBox = new ComboBox<>();
         TextField mobileField = new TextField("Mobile Number");
         FormLayout formLayout = new FormLayout();
         cancelButton = new Button("Cancel");
@@ -258,7 +287,7 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
         doctorComboBox.setEnabled(false);
         mobileField.setEnabled(false);
 
-        doctorComboBox.setItems(receptionistPresenter.getAllDoctor());
+        doctorComboBox.setItems(adminPresenter.getAllDoctor());
         doctorComboBox.setItemLabelGenerator(d -> {
             return d.getFirstName() + " " + d.getLastName() + " (" + d.getDepartment().getDeptName() + ")";
         });
@@ -315,10 +344,10 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
                     throw new RuntimeException(e);
                 }
                 if(idField.getValue()!=null){
-                    Patient patientById = receptionistPresenter.getPatientById(idField.getValue());
+                    Patient patientById = adminPresenter.getPatientById(idField.getValue());
                     try {
                         patientBinder.writeBean(patientById);
-                        receptionistPresenter.addPatient(patientById);
+                        adminPresenter.addPatient(patientById);
                         for(Patient patient1 : allPatient){
                             if(Objects.equals(patient1.getId(), patientById.getId())){
                                 allPatient.set(allPatient.indexOf(patient1),patientById);
@@ -328,7 +357,7 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
                         throw new RuntimeException(e);
                     }
                 }else {
-                    receptionistPresenter.addPatient(bean);
+                    adminPresenter.addPatient(bean);
                     allPatient.add(bean);
                 }
                 patientGrid.getDataProvider().refreshAll();
@@ -359,7 +388,7 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
             if(!selectedItems.isEmpty()){
                 Iterator<Patient> iterator = selectedItems.iterator();
                 Patient patient = iterator.next();
-                receptionistPresenter.deletePatient(patient);
+                adminPresenter.deletePatient(patient);
                 allPatient.remove(patient);
                 Notification notification = Notification.show("Patient deleted successfully", 3000, Notification.Position.TOP_CENTER);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -378,15 +407,15 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
     public VerticalLayout addDoctorDetails(){
 
         VerticalLayout verticalLayout1 = new VerticalLayout();
-        Grid<Doctor> doctorGrid = new Grid<>();
-        doctorGrid.setItems(receptionistPresenter.getAllDoctor());
-        Grid.Column<Doctor> firstName = doctorGrid.addColumn(Doctor::getFirstName).setHeader("First name");
-        Grid.Column<Doctor> lastName = doctorGrid.addColumn(Doctor::getLastName).setHeader("Last Name");
-        Grid.Column<Doctor> education = doctorGrid.addColumn(Doctor::getEducation).setHeader("Education");
-        Grid.Column<Doctor> gender = doctorGrid.addColumn(Doctor::getGender).setHeader("Gender");
-        Grid.Column<Doctor> mobileNumber = doctorGrid.addColumn(Doctor::getMobileNumber).setHeader("Mobile Number");
-        Grid.Column<Doctor> bloodGroup = doctorGrid.addColumn(Doctor::getBloodGroup).setHeader("Blood Group");
-        Grid.Column<Doctor> department = doctorGrid.addColumn(e -> e.getDepartment().getDeptName()).setHeader("Department");
+        Grid<Staff> doctorGrid = new Grid<>();
+        doctorGrid.setItems(adminPresenter.getAllDoctor());
+        Grid.Column<Staff> firstName = doctorGrid.addColumn(Staff::getFirstName).setHeader("First name");
+        Grid.Column<Staff> lastName = doctorGrid.addColumn(Staff::getLastName).setHeader("Last Name");
+        Grid.Column<Staff> education = doctorGrid.addColumn(Staff::getEducation).setHeader("Education");
+        Grid.Column<Staff> gender = doctorGrid.addColumn(Staff::getGender).setHeader("Gender");
+        Grid.Column<Staff> mobileNumber = doctorGrid.addColumn(Staff::getMobileNumber).setHeader("Mobile Number");
+        Grid.Column<Staff> bloodGroup = doctorGrid.addColumn(Staff::getBloodGroup).setHeader("Blood Group");
+        Grid.Column<Staff> department = doctorGrid.addColumn(e -> e.getDepartment().getDeptName()).setHeader("Department");
 
         TextField firstnameField = new TextField();
         TextField lastNameField = new TextField();
@@ -442,10 +471,10 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
         return verticalLayout1;
     }
 
-    public void getDoctorFilter(Grid<Doctor> doctorGrid, TextField firstnameField, TextField lastNameField, TextField educationField, TextField genderField,
+    public void getDoctorFilter(Grid<Staff> doctorGrid, TextField firstnameField, TextField lastNameField, TextField educationField, TextField genderField,
                                 TextField mobileField, TextField bloodGroupField, TextField departmentField){
 
-        ListDataProvider<Doctor> dataProvider = (ListDataProvider)doctorGrid.getDataProvider();
+        ListDataProvider<Staff> dataProvider = (ListDataProvider)doctorGrid.getDataProvider();
         dataProvider.setFilter(e -> {
 
             Boolean b1 = e.getFirstName().toLowerCase().contains(firstnameField.getValue().toLowerCase());
@@ -460,9 +489,9 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
         });
     }
 
-    public void addAppointmentGridLayout(){
+    public VerticalLayout addAppointmentGridLayout(){
 
-        appointmentList = receptionistPresenter.getAllAppointment();
+        appointmentList = adminPresenter.getAllAppointment();
         if(allPatient !=null) {
             appointmentGrid.setItems(appointmentList);
         }
@@ -488,14 +517,14 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
             appointmentBinder.readBean(iterator.next());
         });
 
-        IntegerField idFilter = new IntegerField();
+        TextField idFilter = new TextField();
         TextField nameFilter = new TextField();
-        ComboBox<Doctor> doctorFilter = new ComboBox<>();
+        ComboBox<Staff> doctorFilter = new ComboBox<>();
         ComboBox<Department> departmentFilter = new ComboBox<>();
         TextField addressFilter = new TextField();
-        IntegerField ageFilter = new IntegerField();
+        TextField ageFilter = new TextField();
         TextField descriptionFilter = new TextField();
-        IntegerField timeFilter = new IntegerField();
+        TextField timeFilter = new TextField();
 
         idFilter.setPlaceholder("Id");
         nameFilter.setPlaceholder("Name");
@@ -510,11 +539,11 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
             return d.getFirstName() + " " + d.getLastName();
         });
 
-        if (receptionistPresenter.getAllDoctor()!=null) {
-            doctorFilter.setItems(receptionistPresenter.getAllDoctor());
+        if (adminPresenter.getAllDoctor()!=null) {
+            doctorFilter.setItems(adminPresenter.getAllDoctor());
         }
-        if (receptionistPresenter.getAllDepartment()!=null) {
-            departmentFilter.setItems(receptionistPresenter.getAllDepartment());
+        if (adminPresenter.getAllDepartment()!=null) {
+            departmentFilter.setItems(adminPresenter.getAllDepartment());
         }
 
         departmentFilter.setItemLabelGenerator(Department::getDeptName);
@@ -527,7 +556,7 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
         timeFilter.setValueChangeMode(ValueChangeMode.LAZY);
 
         idFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
-            nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
+                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
         ageFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
                 nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
         descriptionFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
@@ -552,72 +581,85 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
         headerRow.getCell(doctorNameColumn).setComponent(doctorFilter);
         headerRow.getCell(departmentColumn).setComponent(departmentFilter);
 
-        patientGridLayout.add(appointmentGrid);
+        appointmentGridLayout.add(appointmentGrid);
+
+        return appointmentGridLayout;
 
     }
 
-    private void getAppointmentFilter(IntegerField idFilter, IntegerField ageFilter, TextField descriptionFilter,
-                                      TextField nameFilter, TextField addressFilter, ComboBox<Doctor> doctorFilter,
-                                      ComboBox<Department> departmentFilter, IntegerField timeFilter) {
+    private void getAppointmentFilter(TextField idFilter, TextField ageFilter, TextField descriptionFilter,
+                                      TextField nameFilter, TextField addressFilter, ComboBox<Staff> doctorFilter,
+                                      ComboBox<Department> departmentFilter, TextField timeFilter) {
 
         ListDataProvider<Appointment> dataProvider = (ListDataProvider<Appointment>) appointmentGrid.getDataProvider();
         dataProvider.setFilter(e ->{
-            boolean b1 = e.getName().toLowerCase().contains(nameFilter.getValue().toLowerCase());
+            boolean b6 = String.valueOf(e.getId()).contains(idFilter.getValue());
+            boolean b5 = e.getAge().contains(ageFilter.getValue());
             boolean b2 = e.getDescription().toLowerCase().contains(descriptionFilter.getValue().toLowerCase());
-            boolean b3 = e.getDoctor().getDepartment().getDeptName().equals((departmentFilter.getValue()==null) ? null : departmentFilter.getValue().getDeptName());
-            boolean b4 = e.getDoctor().getFirstName().equals(doctorFilter.getValue()==null ? null : doctorFilter.getValue().getFirstName())
-                    || e.getDoctor().getLastName().equals(doctorFilter.getValue() == null ? null : doctorFilter.getValue().getLastName());
-            boolean b5 = Objects.equals(e.getAge(), ageFilter.getValue());
-            boolean b6 = Objects.equals(e.getId(), idFilter.getValue());
+            boolean b1 = e.getName().toLowerCase().contains(nameFilter.getValue().toLowerCase());
             boolean b7 = e.getAddress().toLowerCase().contains(addressFilter.getValue().toLowerCase());
-            boolean b8 = Objects.equals(e.getTime(), timeFilter.getValue());
+            boolean b4 = e.getDoctor().getFirstName().equals(doctorFilter.getValue()==null?"":doctorFilter.getValue().getFirstName());
+            boolean b8 = e.getTime().contains(timeFilter.getValue());
+            boolean b3 = e.getDoctor().getDepartment().getDeptName().equals(departmentFilter.getValue()==null?"":departmentFilter.getValue().getDeptName());
 
-            if(departmentFilter.getValue()== null || doctorFilter.getValue()==null){
-                if(departmentFilter.getValue()== null && doctorFilter.getValue()==null){
+            if(departmentFilter.getValue()== null|| doctorFilter.getValue()== null ){
+                if(departmentFilter.getValue()== null && doctorFilter.getValue()== null ){
                     return b1 && b2 && b5 && b6 && b7 && b8;
-                }else if(doctorFilter.getValue()==null){
-                    return b1 && b2 && b3 && b5 && b6 && b7 && b8;
-                }else {
+                }else if(doctorFilter.getValue()== null){
+                    return b1 && b2 && b3 && b6 && b5  && b7 && b8;
+                }  else {
                     return b1 && b2 && b4 && b5 && b6 && b7 && b8;
                 }
             }
-            return b1 && b2 && b3 && b4 && b5 && b6 && b7 && b8;
+            return b1 && b2 && b3 && b4 && b6 && b5 && b7 && b8;
         });
 
     }
 
-    public void addAppointmentLayout(){
+    public void addAppointmentFieldLayout(){
 
         IntegerField idField = new IntegerField("Id");
-        IntegerField timeField = new IntegerField("Time");
+        TextField timeField = new TextField("Time");
         TextField addressField = new TextField("Address");
-        IntegerField ageField = new IntegerField("Age");
+        TextField ageField = new TextField("Age");
         TextField nameField = new TextField("Name");
-        ComboBox<Doctor> doctorComboBox = new ComboBox<>();
+        ComboBox<Staff> doctorComboBox = new ComboBox<>();
         ComboBox<Department> departmentComboBox = new ComboBox<>();
         TextField description = new TextField("Description");
         FormLayout formLayout = new FormLayout();
-        cancelButton = new Button("Cancel");
-        saveButton = new Button("Save");
+        Button cancelButton = new Button("Cancel");
+        Button saveButton = new Button("Save");
+        Button addButton = new Button("Add");
+        Button editButton = new Button("Edit");
+        Button deleteButton = new Button("delete");
+        Appointment bean = new Appointment();
 
-        saveButton.setVisible(false);
-        cancelButton.setVisible(false);
+//        saveButton.setVisible(false);
+//        cancelButton.setVisible(false);
+        idField.setEnabled(false);
 
         saveButton.getStyle().set("color", "white").set("background-color","green");
         cancelButton.getStyle().set("color","white").set("background-color","red");
+        addButton.getStyle().set("color", "white").set("background-color","green");
+        editButton.getStyle().set("color", "white").set("background-color","blue");
+        deleteButton.getStyle().set("color", "white").set("background-color","red");
+        formLayout.setWidth(40, Unit.PERCENTAGE);
 
         doctorComboBox.setLabel("Doctor");
-        idField.setEnabled(false);
-        timeField.setEnabled(false);
-        description.setEnabled(false);
-        addressField.setEnabled(false);
-        ageField.setEnabled(false);
-        nameField.setEnabled(false);
-        doctorComboBox.setEnabled(false);
-        departmentComboBox.setEnabled(false);
+//        idField.setEnabled(false);
+//        timeField.setEnabled(false);
+//        description.setEnabled(false);
+//        addressField.setEnabled(false);
+//        ageField.setEnabled(false);
+//        nameField.setEnabled(false);
+//        doctorComboBox.setEnabled(false);
+//        departmentComboBox.setEnabled(false);
+        formLayout.setColspan(saveButton,2);
+        formLayout.setColspan(cancelButton,2);
 
-        departmentComboBox.setItems(receptionistPresenter.getAllDepartment());
-        doctorComboBox.setItems(receptionistPresenter.getAllDoctor());
+
+        departmentComboBox.setItems(adminPresenter.getAllDepartment());
+        doctorComboBox.setItems(adminPresenter.getAllDoctor());
         doctorComboBox.setItemLabelGenerator(d -> {
             return d.getFirstName() + " " + d.getLastName() + " (" + d.getDepartment().getDeptName() + ")";
         });
@@ -628,123 +670,116 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
         appointmentBinder.forField(idField).bind(Appointment::getId, Appointment::setId);
         appointmentBinder.forField(addressField).withValidator(s->!s.equals(""),"Please enter address")
                 .bind(Appointment::getAddress, Appointment::setAddress);
-        appointmentBinder.forField(ageField).withValidator(Objects::nonNull,"Please enter age")
+        appointmentBinder.forField(ageField).withValidator(s-> !s.equals(""),"Please enter age")
                 .bind(Appointment::getAge, Appointment::setAge);
-        appointmentBinder.forField(nameField).withValidator(s->!s.equals(""),"Please enter name")
+        appointmentBinder.forField(nameField).withValidator(s-> !s.equals(""),"Please enter name")
                 .bind(Appointment::getName, Appointment::setName);
         appointmentBinder.forField(doctorComboBox).withValidator(Objects::nonNull,"Please select")
                 .bind(Appointment::getDoctor, Appointment::setDoctor);
         appointmentBinder.forField(description)
                 .bind(Appointment::getDescription, Appointment::setDescription);
-        appointmentBinder.forField(timeField).withValidator(Objects::nonNull,"Please select")
-                        .bind(Appointment::getTime,Appointment::setTime);
+        appointmentBinder.forField(timeField).withValidator(s-> !s.equals(""),"Please select")
+                .bind(Appointment::getTime,Appointment::setTime);
 
         addButton.addClickListener(event -> {
             appointmentBinder.removeBean();
+            addAppointment.setSelected(true);
             appointmentBinder.readBean(new Appointment());
-            saveButton.setVisible(true);
-            cancelButton.setVisible(true);
-            formLayout.add(saveButton,cancelButton);
-            timeField.setEnabled(true);
-            description.setEnabled(true);
-            addressField.setEnabled(true);
-            ageField.setEnabled(true);
-            nameField.setEnabled(true);
-            doctorComboBox.setEnabled(true);
-            departmentComboBox.setEnabled(true);
+//            saveButton.setVisible(true);
+//            cancelButton.setVisible(true);
+//            formLayout.add(saveButton,cancelButton);
+//            timeField.setEnabled(true);
+//            description.setEnabled(true);
+//            addressField.setEnabled(true);
+//            ageField.setEnabled(true);
+//            nameField.setEnabled(true);
+//            doctorComboBox.setEnabled(true);
+//            departmentComboBox.setEnabled(true);
         });
         editButton.addClickListener(event -> {
-            Set<Patient> selectedItems = patientGrid.getSelectedItems();
+            Set<Appointment> selectedItems = appointmentGrid.getSelectedItems();
             if(!selectedItems.isEmpty()){
-                saveButton.setVisible(true);
-                cancelButton.setVisible(true);
-                formLayout.add(saveButton,cancelButton);
-                timeField.setEnabled(true);
-                description.setEnabled(true);
-                addressField.setEnabled(true);
-                ageField.setEnabled(true);
-                nameField.setEnabled(true);
-                doctorComboBox.setEnabled(true);
-                departmentComboBox.setEnabled(true);
+//                saveButton.setVisible(true);
+//                cancelButton.setVisible(true);
+//                formLayout.add(saveButton,cancelButton);
+//                timeField.setEnabled(true);
+//                description.setEnabled(true);
+//                addressField.setEnabled(true);
+//                ageField.setEnabled(true);
+//                nameField.setEnabled(true);
+//                doctorComboBox.setEnabled(true);
+//                departmentComboBox.setEnabled(true);
+//                appointmentBinder.readBean();
+                tabs.setSelectedTab(addAppointment);
             }else {
-                Notification notification = Notification.show("Please select patient", 3000, Notification.Position.TOP_CENTER);
+                Notification notification = Notification.show("Please select Appointment", 3000, Notification.Position.TOP_CENTER);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         });
         saveButton.addClickListener(event -> {
-            patientBinder.validate();
-            if(patientBinder.isValid()){
-                Appointment bean = new Appointment();
+            appointmentBinder.validate();
+            if(appointmentBinder.isValid()){
                 try {
                     appointmentBinder.writeBean(bean);
                 } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
-                if(idField.getValue()!=null){
-                    Appointment appointmentById = receptionistPresenter.getAppointmentById(idField.getValue());
+                if(!idField.isEmpty()){
+                    Appointment appointmentById = adminPresenter.getAppointmentById(idField.getValue());
                     try {
                         appointmentBinder.writeBean(appointmentById);
-                        receptionistPresenter.addAppointment(appointmentById);
+                        adminPresenter.addAppointment(appointmentById);
                         for(Appointment appointment : appointmentList){
                             if(Objects.equals(appointment.getId(), appointmentById.getId())){
                                 appointmentList.set(appointmentList.indexOf(appointment),appointmentById);
                             }
                         }
+                        Notification.show("Appointment changed", 2000, Notification.Position.TOP_CENTER);
                     } catch (ValidationException e) {
                         throw new RuntimeException(e);
                     }
                 }else {
-                    receptionistPresenter.addAppointment(bean);
+                    adminPresenter.addAppointment(bean);
                     appointmentList.add(bean);
+                    Notification.show("Appointment saved", 2000, Notification.Position.TOP_CENTER);
                 }
                 appointmentGrid.getDataProvider().refreshAll();
-                Notification.show("Patient Added", 2000, Notification.Position.TOP_CENTER);
 
-                saveButton.setVisible(false);
-                cancelButton.setVisible(false);
-                formLayout.remove(saveButton,cancelButton);
-                timeField.setEnabled(false);
-                description.setEnabled(false);
-                addressField.setEnabled(false);
-                ageField.setEnabled(false);
-                nameField.setEnabled(false);
-                doctorComboBox.setEnabled(false);
-                departmentComboBox.setEnabled(false);
+//                saveButton.setVisible(false);
+//                cancelButton.setVisible(false);
+//                formLayout.remove(saveButton,cancelButton);
+//                timeField.setEnabled(false);
+//                description.setEnabled(false);
+//                addressField.setEnabled(false);
+//                ageField.setEnabled(false);
+//                nameField.setEnabled(false);
+//                doctorComboBox.setEnabled(false);
+//                departmentComboBox.setEnabled(false);
             }
         });
         cancelButton.addClickListener(event -> {
-            saveButton.setVisible(false);
-            cancelButton.setVisible(false);
-            formLayout.remove(saveButton,cancelButton);
-            timeField.setEnabled(false);
-            description.setEnabled(false);
-            addressField.setEnabled(false);
-            ageField.setEnabled(false);
-            nameField.setEnabled(false);
-            doctorComboBox.setEnabled(false);
-            departmentComboBox.setEnabled(false);
+            appointmentBinder.removeBean();
         });
         deleteButton.addClickListener(event -> {
             Set<Appointment> selectedItems = appointmentGrid.getSelectedItems();
             if(!selectedItems.isEmpty()){
                 Iterator<Appointment> iterator = selectedItems.iterator();
                 Appointment appointment = iterator.next();
-                receptionistPresenter.deleteAppointment(appointment);
+                adminPresenter.deleteAppointment(appointment);
                 appointmentList.remove(appointment);
-                Notification notification = Notification.show("Patient deleted successfully", 3000, Notification.Position.TOP_CENTER);
+                Notification notification = Notification.show("Appointment deleted successfully", 3000, Notification.Position.TOP_CENTER);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 appointmentGrid.getDataProvider().refreshAll();
             }
             else {
-                Notification notification = Notification.show("Please select patient", 3000, Notification.Position.TOP_CENTER);
+                Notification notification = Notification.show("Please select appointment", 3000, Notification.Position.TOP_CENTER);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         });
 
-        formLayout.add(idField, nameField, addressField,ageField, description, timeField,doctorComboBox );
-        patientFieldsLayout.add(formLayout);
+        appointmentButtonLayout.add(editButton,deleteButton);
+        formLayout.add(idField, nameField, addressField,ageField, description, timeField,doctorComboBox ,saveButton,cancelButton);
+        appointmentFieldLayout.add(formLayout);
     }
-
-
 
 }

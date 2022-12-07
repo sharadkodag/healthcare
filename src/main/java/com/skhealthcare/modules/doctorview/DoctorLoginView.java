@@ -1,9 +1,10 @@
-package com.skhealthcare.modules.doctorlogin;
+package com.skhealthcare.modules.doctorview;
 
+import com.skhealthcare.entity.Appointment;
 import com.skhealthcare.entity.Department;
-import com.skhealthcare.entity.Doctor;
+import com.skhealthcare.entity.Staff;
 import com.skhealthcare.entity.Patient;
-import com.skhealthcare.modules.homepage.Template;
+import com.skhealthcare.modules.homeview.Template;
 import com.skhealthcare.mvputil.BaseView;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -46,6 +47,7 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
 
     VerticalLayout patientGridLayout;
     VerticalLayout patientFieldsLayout;
+    VerticalLayout appointmentGridLayout;
     Tabs tabs;
     Tab patientDetails;
     Tab appointments;
@@ -59,8 +61,12 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
     List<Patient> allPatient;
     TextField nameFilter;
     TextField addressFilter;
-    ComboBox<Doctor> doctorFilter;
+    ComboBox<Staff> doctorFilter;
     ComboBox<Department> departmentFilter;
+    Tab appointmentDetails;
+    Grid<Appointment> appointmentGrid;
+    List<Appointment> appointmentList;
+    Binder<Appointment> appointmentBinder;
 
     @PostConstruct
     public void init(){
@@ -84,9 +90,12 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
         addressFilter = new TextField();
         doctorFilter = new ComboBox<>();
         departmentFilter = new ComboBox<>();
+        appointmentGridLayout = new VerticalLayout();
+        appointmentGrid = new Grid<>();
 
         setMargin(false);
         setPadding(false);
+        setSizeFull();
 
         addLayout();
         addMenuBarLayout();
@@ -136,15 +145,16 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
             }else if(event.getSelectedTab().equals(appointments)){
                 gridAndFieldsLayout.removeAll();
                 buttonLayout.setVisible(false);
-//                gridAndFieldsLayout.add(addDoctorDetails());
+                gridAndFieldsLayout.add(appointmentGridLayout);
             }
         });
 
-        addGridLayout();
-        addFieldLayout();
+        addPatientGridLayout();
+        addPatientFieldLayout();
+        addAppointmentGridLayout();
     }
 
-    public void addGridLayout(){
+    public void addPatientGridLayout(){
 
         allPatient = doctorLoginPresenter.getAllPatient();
         if(allPatient !=null) {
@@ -225,13 +235,13 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
 
     }
 
-    public void addFieldLayout(){
+    public void addPatientFieldLayout(){
 
         IntegerField idField = new IntegerField("Id");
         TextField addressField = new TextField("Address");
         IntegerField ageField = new IntegerField("Age");
         TextField nameField = new TextField("Name");
-        ComboBox<Doctor> doctorComboBox = new ComboBox<>();
+        ComboBox<Staff> doctorComboBox = new ComboBox<>();
         TextField mobileField = new TextField("Mobile Number");
         FormLayout formLayout = new FormLayout();
         cancelButton = new Button("Cancel");
@@ -317,15 +327,16 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
                                 allPatient.set(allPatient.indexOf(patient1),patientById);
                             }
                         }
+                        Notification.show("Patient Updated", 2000, Notification.Position.TOP_CENTER);
                     } catch (ValidationException e) {
                         throw new RuntimeException(e);
                     }
                 }else {
                     doctorLoginPresenter.addPatient(bean);
                     allPatient.add(bean);
+                    Notification.show("Patient Added", 2000, Notification.Position.TOP_CENTER);
                 }
                 patientGrid.getDataProvider().refreshAll();
-                Notification.show("Patient Added", 2000, Notification.Position.TOP_CENTER);
 
                 saveButton.setVisible(false);
                 cancelButton.setVisible(false);
@@ -366,6 +377,133 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
 
         formLayout.add(idField, nameField, addressField,ageField, mobileField,doctorComboBox );
         patientFieldsLayout.add(formLayout);
+    }
+
+    public VerticalLayout addAppointmentGridLayout(){
+
+        appointmentList = doctorLoginPresenter.getAllAppointment();
+        if(allPatient !=null) {
+            appointmentGrid.setItems(appointmentList);
+        }
+        Grid.Column<Appointment> idColumn = appointmentGrid.addColumn(Appointment::getId).setHeader("Id");
+        Grid.Column<Appointment> nameColumn = appointmentGrid.addColumn(Appointment::getName).setHeader("Name");
+        Grid.Column<Appointment> doctorNameColumn = appointmentGrid.addColumn(p ->{
+            return p.getDoctor().getFirstName() + " " + p.getDoctor().getLastName();
+        }).setHeader("Doctor Name");
+        Grid.Column<Appointment> departmentColumn = appointmentGrid.addColumn(p -> {
+            return p.getDoctor().getDepartment().getDeptName();
+        }).setHeader("Department");
+        Grid.Column<Appointment> addressColumn = appointmentGrid.addColumn(Appointment::getAddress).setHeader("Address");
+        Grid.Column<Appointment> ageColumn = appointmentGrid.addColumn(Appointment::getAge).setHeader("Age");
+        Grid.Column<Appointment> descriptionColumn = appointmentGrid.addColumn(Appointment::getDescription).setHeader("Description");
+        Grid.Column<Appointment> timeColumn = appointmentGrid.addColumn(Appointment::getTime).setHeader("Time");
+
+
+        HeaderRow headerRow = appointmentGrid.appendHeaderRow();
+
+        appointmentGrid.addSelectionListener(event -> {
+            Set<Appointment> allSelectedItems = event.getAllSelectedItems();
+            Iterator<Appointment> iterator = allSelectedItems.iterator();
+            appointmentBinder.readBean(iterator.next());
+        });
+
+        TextField idFilter = new TextField();
+        TextField nameFilter = new TextField();
+        ComboBox<Staff> doctorFilter = new ComboBox<>();
+        ComboBox<Department> departmentFilter = new ComboBox<>();
+        TextField addressFilter = new TextField();
+        TextField ageFilter = new TextField();
+        TextField descriptionFilter = new TextField();
+        TextField timeFilter = new TextField();
+
+        idFilter.setPlaceholder("Id");
+        nameFilter.setPlaceholder("Name");
+        addressFilter.setPlaceholder("Address");
+        ageFilter.setPlaceholder("Age");
+        descriptionFilter.setPlaceholder("Description");
+        doctorFilter.setPlaceholder("Doctor");
+        departmentFilter.setPlaceholder("Department");
+        timeFilter.setPlaceholder("Time");
+
+        doctorFilter.setItemLabelGenerator(d ->{
+            return d.getFirstName() + " " + d.getLastName();
+        });
+
+        if (doctorLoginPresenter.getAllDoctor()!=null) {
+            doctorFilter.setItems(doctorLoginPresenter.getAllDoctor());
+        }
+        if (doctorLoginPresenter.getAllDepartment()!=null) {
+            departmentFilter.setItems(doctorLoginPresenter.getAllDepartment());
+        }
+
+        departmentFilter.setItemLabelGenerator(Department::getDeptName);
+
+        idFilter.setValueChangeMode(ValueChangeMode.LAZY);
+        nameFilter.setValueChangeMode(ValueChangeMode.LAZY);
+        addressFilter.setValueChangeMode(ValueChangeMode.LAZY);
+        ageFilter.setValueChangeMode(ValueChangeMode.LAZY);
+        descriptionFilter.setValueChangeMode(ValueChangeMode.LAZY);
+        timeFilter.setValueChangeMode(ValueChangeMode.LAZY);
+
+        idFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
+                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
+        ageFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
+                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
+        descriptionFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
+                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
+        nameFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
+                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
+        addressFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
+                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
+        doctorFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
+                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
+        departmentFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
+                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
+        timeFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
+                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
+
+        headerRow.getCell(idColumn).setComponent(idFilter);
+        headerRow.getCell(timeColumn).setComponent(timeFilter);
+        headerRow.getCell(ageColumn).setComponent(ageFilter);
+        headerRow.getCell(descriptionColumn).setComponent(descriptionFilter);
+        headerRow.getCell(nameColumn).setComponent(nameFilter);
+        headerRow.getCell(addressColumn).setComponent(addressFilter);
+        headerRow.getCell(doctorNameColumn).setComponent(doctorFilter);
+        headerRow.getCell(departmentColumn).setComponent(departmentFilter);
+
+        appointmentGridLayout.add(appointmentGrid);
+
+        return appointmentGridLayout;
+
+    }
+
+    private void getAppointmentFilter(TextField idFilter, TextField ageFilter, TextField descriptionFilter,
+                                      TextField nameFilter, TextField addressFilter, ComboBox<Staff> doctorFilter,
+                                      ComboBox<Department> departmentFilter, TextField timeFilter) {
+
+        ListDataProvider<Appointment> dataProvider = (ListDataProvider<Appointment>) appointmentGrid.getDataProvider();
+        dataProvider.setFilter(e ->{
+            boolean b6 = String.valueOf(e.getId()).contains(idFilter.getValue());
+            boolean b5 = e.getAge().contains(ageFilter.getValue());
+            boolean b2 = e.getDescription().toLowerCase().contains(descriptionFilter.getValue().toLowerCase());
+            boolean b1 = e.getName().toLowerCase().contains(nameFilter.getValue().toLowerCase());
+            boolean b7 = e.getAddress().toLowerCase().contains(addressFilter.getValue().toLowerCase());
+            boolean b4 = e.getDoctor().getFirstName().equals(doctorFilter.getValue()==null?"":doctorFilter.getValue().getFirstName());
+            boolean b8 = e.getTime().contains(timeFilter.getValue());
+            boolean b3 = e.getDoctor().getDepartment().getDeptName().equals(departmentFilter.getValue()==null?"":departmentFilter.getValue().getDeptName());
+
+            if(departmentFilter.getValue()== null|| doctorFilter.getValue()== null ){
+                if(departmentFilter.getValue()== null && doctorFilter.getValue()== null ){
+                    return b1 && b2 && b5 && b6 && b7 && b8;
+                }else if(doctorFilter.getValue()== null){
+                    return b1 && b2 && b3 && b6 && b5  && b7 && b8;
+                }  else {
+                    return b1 && b2 && b4 && b5 && b6 && b7 && b8;
+                }
+            }
+            return b1 && b2 && b3 && b4 && b6 && b5 && b7 && b8;
+        });
+
     }
 
 

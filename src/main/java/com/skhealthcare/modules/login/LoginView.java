@@ -1,7 +1,7 @@
 package com.skhealthcare.modules.login;
 
 import com.skhealthcare.entity.Department;
-import com.skhealthcare.entity.Doctor;
+import com.skhealthcare.entity.Staff;
 import com.skhealthcare.entity.Patient;
 import com.skhealthcare.modules.mainpage.MainPageView;
 import com.skhealthcare.mvputil.BaseView;
@@ -52,7 +52,7 @@ public class LoginView extends BaseView<LoginPresenter> {
     Tabs doctorTabs;
     Tabs receptionistTab;
     Patient patient;
-    Doctor doctor;
+    Staff doctor;
     List<Patient> allPatient;
 
     Grid<Patient> patientGrid;
@@ -173,7 +173,7 @@ public class LoginView extends BaseView<LoginPresenter> {
         ageField.setEnabled(false);
         TextField nameField = new TextField("Name");
         nameField.setEnabled(false);
-        ComboBox<Doctor> doctorComboBox = new ComboBox<>();
+        ComboBox<Staff> doctorComboBox = new ComboBox<>();
         doctorComboBox.setEnabled(false);
         doctorComboBox.setLabel("Doctor");
         doctorComboBox.setItems(loginPresenter.getAllDoctor());
@@ -223,7 +223,7 @@ public class LoginView extends BaseView<LoginPresenter> {
         nameFilter.setPlaceholder("Name");
         TextField addressFilter = new TextField();
         addressFilter.setPlaceholder("Address");
-        ComboBox<Doctor> doctorFilter = new ComboBox<>();
+        ComboBox<Staff> doctorFilter = new ComboBox<>();
         if (loginPresenter.getAllDoctor()!=null) {
             doctorFilter.setItems(loginPresenter.getAllDoctor());
         }
@@ -392,7 +392,7 @@ public class LoginView extends BaseView<LoginPresenter> {
     }
 
     private void getPatientFilter(Grid<Patient> patientGrid, TextField nameFilter, TextField addressFilter,
-                                  ComboBox<Department> departmentFilter, ComboBox<Doctor> doctorFilter) {
+                                  ComboBox<Department> departmentFilter, ComboBox<Staff> doctorFilter) {
 
         ListDataProvider<Patient> dataProvider = (ListDataProvider<Patient>) patientGrid.getDataProvider();
         dataProvider.setFilter(e ->{
@@ -420,15 +420,15 @@ public class LoginView extends BaseView<LoginPresenter> {
     public VerticalLayout addDoctorDetails(){
 
         VerticalLayout verticalLayout1 = new VerticalLayout();
-        Grid<Doctor> doctorGrid = new Grid<>();
+        Grid<Staff> doctorGrid = new Grid<>();
         doctorGrid.setItems(loginPresenter.getAllDoctor());
-        Grid.Column<Doctor> firstName = doctorGrid.addColumn(Doctor::getFirstName).setHeader("First name");
-        Grid.Column<Doctor> lastName = doctorGrid.addColumn(Doctor::getLastName).setHeader("Last Name");
-        Grid.Column<Doctor> education = doctorGrid.addColumn(Doctor::getEducation).setHeader("Education");
-        Grid.Column<Doctor> gender = doctorGrid.addColumn(Doctor::getGender).setHeader("Gender");
-        Grid.Column<Doctor> mobileNumber = doctorGrid.addColumn(Doctor::getMobileNumber).setHeader("Mobile Number");
-        Grid.Column<Doctor> bloodGroup = doctorGrid.addColumn(Doctor::getBloodGroup).setHeader("Blood Group");
-        Grid.Column<Doctor> department = doctorGrid.addColumn(e -> e.getDepartment().getDeptName()).setHeader("Department");
+        Grid.Column<Staff> firstName = doctorGrid.addColumn(Staff::getFirstName).setHeader("First name");
+        Grid.Column<Staff> lastName = doctorGrid.addColumn(Staff::getLastName).setHeader("Last Name");
+        Grid.Column<Staff> education = doctorGrid.addColumn(Staff::getEducation).setHeader("Education");
+        Grid.Column<Staff> gender = doctorGrid.addColumn(Staff::getGender).setHeader("Gender");
+        Grid.Column<Staff> mobileNumber = doctorGrid.addColumn(Staff::getMobileNumber).setHeader("Mobile Number");
+        Grid.Column<Staff> bloodGroup = doctorGrid.addColumn(Staff::getBloodGroup).setHeader("Blood Group");
+        Grid.Column<Staff> department = doctorGrid.addColumn(e -> e.getDepartment().getDeptName()).setHeader("Department");
 
         TextField firstnameField = new TextField();
         TextField lastNameField = new TextField();
@@ -485,10 +485,10 @@ public class LoginView extends BaseView<LoginPresenter> {
 
     }
 
-    public void getDoctorFilter(Grid<Doctor> doctorGrid, TextField firstnameField, TextField lastNameField, TextField educationField, TextField genderField,
+    public void getDoctorFilter(Grid<Staff> doctorGrid, TextField firstnameField, TextField lastNameField, TextField educationField, TextField genderField,
                                 TextField mobileField, TextField bloodGroupField, TextField departmentField){
 
-        ListDataProvider<Doctor> dataProvider = (ListDataProvider)doctorGrid.getDataProvider();
+        ListDataProvider<Staff> dataProvider = (ListDataProvider)doctorGrid.getDataProvider();
         dataProvider.setFilter(e -> {
 
             Boolean b1 = e.getFirstName().toLowerCase().contains(firstnameField.getValue().toLowerCase());

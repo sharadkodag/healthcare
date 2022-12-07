@@ -1,9 +1,8 @@
-package com.skhealthcare.modules.homepage;
+package com.skhealthcare.modules.homeview;
 
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Label;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.RouterLayout;
 

@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.sql.Time;
 
 @Entity
 @Getter
@@ -21,10 +20,10 @@ public class Appointment {
     private Integer id;
     private String name;
     private String address;
-    private Integer age;
+    private String age;
     private String description;
     @OneToOne
-    private Doctor doctor;
-    private Integer time;
+    private Staff doctor;
+    private String time;
 
 }

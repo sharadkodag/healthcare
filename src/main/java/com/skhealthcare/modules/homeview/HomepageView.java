@@ -1,6 +1,6 @@
-package com.skhealthcare.modules.homepage;
+package com.skhealthcare.modules.homeview;
 
-import com.skhealthcare.modules.receprionist.ReceptionistView;
+import com.skhealthcare.modules.receprionistview.ReceptionistView;
 import com.skhealthcare.mvputil.BaseView;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -13,11 +13,19 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.annotation.SpringComponent;
+import com.vaadin.flow.spring.annotation.UIScope;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 
 @Route(value = "homepage", layout = Template.class)
+@UIScope
+@SpringComponent
 public class HomepageView extends BaseView<HomepagePresenter> {
+
+    @Autowired
+    HomepagePresenter homepagePresenter;
 
     VerticalLayout verticalLayout;
     HorizontalLayout horizontalLayout;
@@ -26,6 +34,7 @@ public class HomepageView extends BaseView<HomepagePresenter> {
     Button receptionistButton;
     Button pharmacistLoginButton;
     Button doctorLoginButton;
+    Button login;
 
     @PostConstruct
     public void init(){
@@ -33,10 +42,10 @@ public class HomepageView extends BaseView<HomepagePresenter> {
         verticalLayout = new VerticalLayout();
         horizontalLayout = new HorizontalLayout();
         horizontalLayout1 = new HorizontalLayout();
-        adminButton = new Button("Admin Login");
-        receptionistButton = new Button("Receptionist Login");
-        pharmacistLoginButton = new Button("Pharmacist Login");
-        doctorLoginButton = new Button("Doctor Login");
+        adminButton = new Button("Admin");
+        receptionistButton = new Button("Receptionist");
+        pharmacistLoginButton = new Button("Pharmacist");
+        doctorLoginButton = new Button("Doctor");
 
         addButtonLayout();
     }
@@ -80,7 +89,7 @@ public class HomepageView extends BaseView<HomepagePresenter> {
         FormLayout formLayout = new FormLayout();
         TextField username = new TextField("Username");
         PasswordField passwordField = new PasswordField("Password");
-        Button login = new Button("Login");
+        login = new Button("Login");
 
         dialog.open();
 
@@ -96,7 +105,7 @@ public class HomepageView extends BaseView<HomepagePresenter> {
 
         login.addClickListener(event -> {
             dialog.close();
-            login.getUI().ifPresent(e -> e.navigate(ReceptionistView.class));
+            homepagePresenter.checkUserAndLogin(text, username.getValue(), passwordField.getValue(), login);
         });
         back.addClickListener(event -> {
             dialog.close();

@@ -22,7 +22,7 @@ public class Patient {
     private Integer age;
     private String mobileNumber;
     @ManyToOne
-    private Doctor doctor;
+    private Staff doctor;
 
     @Override
     public boolean equals(Object o) {

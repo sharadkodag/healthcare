@@ -18,8 +18,10 @@ public class Department {
     private int id;
     private String deptName;
     @OneToMany(mappedBy = "department")
-    List<Doctor> doctorList;
-    @OneToMany(mappedBy = "dept")
-    List<Staff> staffList;
+    List<Staff> doctorList;
+
+
+
+
 
 }

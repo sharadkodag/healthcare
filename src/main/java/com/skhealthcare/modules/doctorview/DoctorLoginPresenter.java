@@ -1,13 +1,13 @@
-package com.skhealthcare.modules.receprionist;
+package com.skhealthcare.modules.doctorview;
 
 import com.skhealthcare.entity.Appointment;
 import com.skhealthcare.entity.Department;
-import com.skhealthcare.entity.Doctor;
+import com.skhealthcare.entity.Staff;
 import com.skhealthcare.entity.Patient;
 import com.skhealthcare.mvputil.BasePresenter;
 import com.skhealthcare.service.AppointmentService;
 import com.skhealthcare.service.DepartmentService;
-import com.skhealthcare.service.DoctorService;
+import com.skhealthcare.service.StaffService;
 import com.skhealthcare.service.PatientService;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
@@ -15,15 +15,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-@UIScope
 @SpringComponent
-public class ReceptionistPresenter extends BasePresenter<ReceptionistView> {
+@UIScope
+public class DoctorLoginPresenter extends BasePresenter<DoctorLoginView> {
 
     @Autowired
     PatientService patientService;
 
     @Autowired
-    DoctorService doctorService;
+    StaffService staffService;
 
     @Autowired
     DepartmentService departmentService;
@@ -35,8 +35,8 @@ public class ReceptionistPresenter extends BasePresenter<ReceptionistView> {
         return patientService.getAllPatient();
     }
 
-    public List<Doctor> getAllDoctor(){
-        return doctorService.getAllDoctors();
+    public List<Staff> getAllDoctor(){
+        return staffService.getAllDoctors();
     }
 
     public List<Department> getAllDepartment(){
@@ -58,18 +58,10 @@ public class ReceptionistPresenter extends BasePresenter<ReceptionistView> {
     public List<Appointment> getAllAppointment(){
         return appointmentService.getAllAppointment();
     }
-
-    public void addAppointment(Appointment appointment){
-        appointmentService.addAppointment(appointment);
-    }
-
-    public void deleteAppointment(Appointment appointment){
-        appointmentService.deleteAppointment(appointment);
-    }
-
     public Appointment getAppointmentById(Integer id){
-        return appointmentService.getAppointmentId(id);
+        return appointmentService.getAppointmentById(id);
     }
+
 
 
 }

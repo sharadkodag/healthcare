@@ -1,16 +1,15 @@
 package com.skhealthcare.modules.login;
 
 import com.skhealthcare.entity.Department;
-import com.skhealthcare.entity.Doctor;
+import com.skhealthcare.entity.Staff;
 import com.skhealthcare.entity.Patient;
 import com.skhealthcare.mvputil.BasePresenter;
 import com.skhealthcare.service.DepartmentService;
-import com.skhealthcare.service.DoctorService;
+import com.skhealthcare.service.StaffService;
 import com.skhealthcare.service.PatientService;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
@@ -22,7 +21,7 @@ public class LoginPresenter extends BasePresenter<LoginView> {
     PatientService patientService;
 
     @Autowired
-    DoctorService doctorService;
+    StaffService staffService;
 
     @Autowired
     DepartmentService departmentService;
@@ -31,8 +30,8 @@ public class LoginPresenter extends BasePresenter<LoginView> {
         return patientService.getAllPatient();
     }
 
-    public List<Doctor> getAllDoctor(){
-        return doctorService.getAllDoctors();
+    public List<Staff> getAllDoctor(){
+        return staffService.getAllDoctors();
     }
 
     public List<Department> getAllDepartment(){
