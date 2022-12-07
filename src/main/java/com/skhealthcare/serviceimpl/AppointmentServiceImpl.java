@@ -18,4 +18,19 @@ public class AppointmentServiceImpl implements AppointmentService {
     public List<Appointment> getAllAppointment() {
         return appointmentRepository.findAll();
     }
+
+    @Override
+    public void addAppointment(Appointment appointment) {
+        appointmentRepository.save(appointment);
+    }
+
+    @Override
+    public void deleteAppointment(Appointment appointment) {
+        appointmentRepository.delete(appointment);
+    }
+
+    @Override
+    public Appointment getAppointmentById(Integer id) {
+        return appointmentRepository.findById(id).orElse(null);
+    }
 }

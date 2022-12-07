@@ -9,4 +9,10 @@ public interface AppointmentService {
 
     public List<Appointment> getAllAppointment();
 
+    public void addAppointment(Appointment appointment);
+
+    public void deleteAppointment(Appointment appointment);
+
+    public Appointment getAppointmentById(Integer id);
+
 }
