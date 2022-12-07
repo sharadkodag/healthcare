@@ -51,16 +51,24 @@ public class ReceptionistPresenter extends BasePresenter<ReceptionistView> {
         patientService.deletePatient(patient);
     }
 
-    public void updatePatient(Patient patient){
-        patientService.updatePatient(patient);
-    }
-
     public Patient getPatientById(Integer id){
         return patientService.getPatientById(id);
     }
 
     public List<Appointment> getAllAppointment(){
         return appointmentService.getAllAppointment();
+    }
+
+    public void addAppointment(Appointment appointment){
+        appointmentService.addAppointment(appointment);
+    }
+
+    public void deleteAppointment(Appointment appointment){
+        appointmentService.deleteAppointment(appointment);
+    }
+
+    public Appointment getAppointmentById(Integer id){
+        return appointmentService.getAppointmentId(id);
     }
 
 
