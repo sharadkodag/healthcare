@@ -9,6 +9,8 @@ import com.skhealthcare.mvputil.BaseView;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
@@ -17,6 +19,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -70,6 +73,8 @@ public class AdminView extends BaseView<AdminPresenter> {
     Grid<Appointment> appointmentGrid;
     List<Appointment> appointmentList;
     Binder<Appointment> appointmentBinder;
+    HorizontalLayout doctorButtonLayout;
+    Binder<Staff> staffBinder;
 
     @PostConstruct
     public void init(){
@@ -101,6 +106,8 @@ public class AdminView extends BaseView<AdminPresenter> {
         appointmentGrid = new Grid<>();
         appointmentList = new ArrayList<>();
         appointmentBinder = new Binder<>();
+        doctorButtonLayout = new HorizontalLayout();
+        staffBinder = new Binder<>();
 
         setMargin(false);
         setPadding(false);
@@ -417,7 +424,7 @@ public class AdminView extends BaseView<AdminPresenter> {
         Grid.Column<Staff> bloodGroup = doctorGrid.addColumn(Staff::getBloodGroup).setHeader("Blood Group");
         Grid.Column<Staff> department = doctorGrid.addColumn(e -> e.getDepartment().getDeptName()).setHeader("Department");
 
-        TextField firstnameField = new TextField();
+        TextField firstNameField = new TextField();
         TextField lastNameField = new TextField();
         TextField educationField = new TextField();
         TextField genderField= new TextField();
@@ -425,7 +432,7 @@ public class AdminView extends BaseView<AdminPresenter> {
         TextField bloodGroupField = new TextField();
         TextField departmentField = new TextField();
 
-        firstnameField.setPlaceholder("First Name");
+        firstNameField.setPlaceholder("First Name");
         lastNameField.setPlaceholder("Last Name");
         educationField.setPlaceholder("Education");
         genderField.setPlaceholder("Gender");
@@ -433,7 +440,7 @@ public class AdminView extends BaseView<AdminPresenter> {
         bloodGroupField.setPlaceholder("Blood Group");
         departmentField.setPlaceholder("Department");
 
-        firstnameField.setValueChangeMode(ValueChangeMode.LAZY);
+        firstNameField.setValueChangeMode(ValueChangeMode.LAZY);
         lastNameField.setValueChangeMode(ValueChangeMode.LAZY);
         educationField.setValueChangeMode(ValueChangeMode.LAZY);
         bloodGroupField.setValueChangeMode(ValueChangeMode.LAZY);
@@ -442,7 +449,7 @@ public class AdminView extends BaseView<AdminPresenter> {
         departmentField.setValueChangeMode(ValueChangeMode.LAZY);
 
         HeaderRow headerRow = doctorGrid.appendHeaderRow();
-        headerRow.getCell(firstName).setComponent(firstnameField);
+        headerRow.getCell(firstName).setComponent(firstNameField);
         headerRow.getCell(lastName).setComponent(lastNameField);
         headerRow.getCell(education).setComponent(educationField);
         headerRow.getCell(gender).setComponent(genderField);
@@ -453,20 +460,66 @@ public class AdminView extends BaseView<AdminPresenter> {
         verticalLayout1.add(doctorGrid);
         verticalLayout1.setSizeFull();
 
-        firstnameField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+        firstNameField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
-        lastNameField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+        lastNameField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
-        genderField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+        genderField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
-        bloodGroupField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+        bloodGroupField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
-        departmentField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+        departmentField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
-        educationField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+        educationField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
-        mobileField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstnameField,lastNameField,educationField,
+        mobileField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
+
+        Button addButton = new Button("Add");
+        Button editButton = new Button("Edit");
+        Button deleteButton = new Button("Delete");
+
+        addButton.addClickListener(event -> {
+            Dialog dialog = new Dialog();
+            FormLayout formLayout = new FormLayout();
+            TextField fName = new TextField("First Name");
+            TextField lName = new TextField("Last Name");
+            DatePicker dob = new DatePicker("Date of Birth");
+            ComboBox<String> edu = new ComboBox<>("Education");
+            RadioButtonGroup<String> genderF= new RadioButtonGroup<>();
+            TextField mob = new TextField("Mobile");
+            ComboBox<String> bg = new ComboBox<>("Blood Group");
+            ComboBox<String> dept = new ComboBox<>("Department");
+            ComboBox<String> designation = new ComboBox<>("Designaion");
+            ComboBox<String> maritalStatus = new ComboBox<>("Marital Status");
+            DatePicker joining = new DatePicker("Joining Date");
+            RadioButtonGroup<String> isWorking = new RadioButtonGroup<>();
+            DatePicker leavingDate = new DatePicker();
+            TextField userName = new TextField();
+            TextField password = new TextField();
+
+            genderF.setItems("Male", "Female");
+            edu.setItems("B.Pharmacy", "D.Pharmacy", "M.B.B.S", "B.H.M.S", "B.A.M.S", "HSC", "SSC",
+                    "B.Tech", "B.Sc", "B.Com", "B.A", "M.D");
+            bg.setItems("A +ve", "A -ve", "B +ve", "B -ve", "AB +ve", "AB -ve", "O +ve", "O -ve");
+            dept.setItems("General", "Dental", "Accidental", "Surgery", "Cardiology", "Psychology");
+            designation.setItems("Doctor", "Nurse", "Receptionist","Helper", "Pharmacist");
+            maritalStatus.setItems("Single", "Married", "Divorced");
+            isWorking.setItems("true", "false");
+
+            staffBinder.forField(fName).withValidator(s -> !s.equals(""),"Enter first name");
+            staffBinder.forField(lName).withValidator(s -> !s.equals(""),"Enter lsat name");
+            staffBinder.forField(dob).withValidator(s -> dob.getValue()!=null,"Enter date of Birth");
+            staffBinder.forField(edu).withValidator(Objects::nonNull,"Enter education");
+            staffBinder.forField(genderF).withValidator(s -> !s.equals(""),"select gender");
+            staffBinder.forField(fName).withValidator(s -> !s.equals(""),"Enter first name");
+            staffBinder.forField(fName).withValidator(s -> !s.equals(""),"Enter first name");
+
+
+
+
+
+        });
 
         return verticalLayout1;
     }
@@ -489,7 +542,7 @@ public class AdminView extends BaseView<AdminPresenter> {
         });
     }
 
-    public VerticalLayout addAppointmentGridLayout(){
+    public void addAppointmentGridLayout(){
 
         appointmentList = adminPresenter.getAllAppointment();
         if(allPatient !=null) {
@@ -582,8 +635,6 @@ public class AdminView extends BaseView<AdminPresenter> {
         headerRow.getCell(departmentColumn).setComponent(departmentFilter);
 
         appointmentGridLayout.add(appointmentGrid);
-
-        return appointmentGridLayout;
 
     }
 

@@ -36,7 +36,7 @@ public class DoctorLoginPresenter extends BasePresenter<DoctorLoginView> {
     }
 
     public List<Staff> getAllDoctor(){
-        return staffService.getAllDoctors();
+        return staffService.getAllDoctors("Doctor");
     }
 
     public List<Department> getAllDepartment(){

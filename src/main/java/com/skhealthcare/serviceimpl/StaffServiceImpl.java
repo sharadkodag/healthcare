@@ -15,18 +15,18 @@ public class StaffServiceImpl implements StaffService {
     StaffRepository staffRepository;
 
     @Override
-    public List<Staff> getAllDoctors() {
-        return staffRepository.findAll();
+    public List<Staff> getAllDoctors(String designation) {
+        return staffRepository.findAllByDesignation(designation);
     }
 
     @Override
     public Staff checkStaff(String text, String userName, String password) {
-//        Staff staff = staffRepository.findByUserNameAndPasswordAndDesignation(userName, password, text);
-        Staff staff = staffRepository.findByUserName(userName);
-        if(staff!=null && staff.getPassword().equals(password) && staff.getDesignation().equals(text)){
-            return staff;
-        }
-        return null;
+        Staff staff = staffRepository.findByUserNameAndPasswordAndDesignation(userName, password, text);
+//        Staff staff = staffRepository.findByUserName(userName);
+//        if(staff!=null && staff.getPassword().equals(password) && staff.getDesignation().equals(text)){
+//            return staff;
+//        }
+        return staff;
 
     }
 

@@ -36,7 +36,7 @@ public class ReceptionistPresenter extends BasePresenter<ReceptionistView> {
     }
 
     public List<Staff> getAllDoctor(){
-        return staffService.getAllDoctors();
+        return staffService.getAllDoctors("Doctor");
     }
 
     public List<Department> getAllDepartment(){
