@@ -1,8 +1,10 @@
 package com.skhealthcare.serviceimpl;
 
 import com.skhealthcare.entity.Patient;
+import com.skhealthcare.entity.Staff;
 import com.skhealthcare.repository.PatientRepository;
 import com.skhealthcare.service.PatientService;
+import com.vaadin.flow.server.VaadinSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,5 +41,9 @@ public class PatientServiceImpl implements PatientService {
         return patientRepository.findById(id).orElse(null);
     }
 
+    @Override
+    public List<Patient> getAllPatientForDoctor(Staff doctor) {
+        return patientRepository.findAllByDoctor(doctor);
+    }
 
 }

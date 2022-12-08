@@ -15,7 +15,7 @@ public class Patient {
 
     @Id
     @SequenceGenerator(name = "sr", sequenceName = "sr", initialValue = 1, allocationSize = 1)
-    @GeneratedValue(generator = "sr",strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(generator = "sr", strategy = GenerationType.SEQUENCE)
     private Integer id;
     private String fullName;
     private String address;

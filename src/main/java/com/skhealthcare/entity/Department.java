@@ -21,7 +21,4 @@ public class Department {
     List<Staff> doctorList;
 
 
-
-
-
 }

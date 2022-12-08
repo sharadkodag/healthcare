@@ -4,10 +4,12 @@ import com.skhealthcare.entity.Appointment;
 import com.skhealthcare.entity.Department;
 import com.skhealthcare.entity.Staff;
 import com.skhealthcare.entity.Patient;
+import com.skhealthcare.modules.homeview.HomepageView;
 import com.skhealthcare.modules.homeview.Template;
 import com.skhealthcare.mvputil.BaseView;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -28,7 +30,9 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +59,7 @@ public class AdminView extends BaseView<AdminPresenter> {
     VerticalLayout appointmentFieldLayout;
     Tabs tabs;
     Tab patientDetails;
-    Tab doctorDetails;
+    Tab staffDetails;
     Tab appointmentDetails;
     Tab addAppointment;
     Button addButton;
@@ -68,15 +72,20 @@ public class AdminView extends BaseView<AdminPresenter> {
     List<Patient> allPatient;
     TextField nameFilter;
     TextField addressFilter;
-    ComboBox<Staff> doctorFilter;
+    ComboBox<Staff> staffFilter;
     ComboBox<Department> departmentFilter;
     Grid<Appointment> appointmentGrid;
     List<Appointment> appointmentList;
     Binder<Appointment> appointmentBinder;
-    HorizontalLayout doctorButtonLayout;
+    HorizontalLayout staffButtonLayout;
     Binder<Staff> staffBinder;
 
-    @PostConstruct
+    @Override
+    public void beforeEnter(BeforeEnterEvent observer){
+        getPresenter().beforeEnter(observer);
+    }
+
+    @Override
     public void init(){
         tabsLayout = new VerticalLayout();
         tabs = new Tabs();
@@ -93,7 +102,7 @@ public class AdminView extends BaseView<AdminPresenter> {
         addButton = new Button("Add");
         editButton = new Button("Edit");
         deleteButton = new Button("Delete");
-        doctorDetails = new Tab();
+        staffDetails = new Tab();
         patientBinder = new Binder<>();
         cancelButton = new Button("Cancel");
         saveButton = new Button("Save");
@@ -101,12 +110,12 @@ public class AdminView extends BaseView<AdminPresenter> {
         patientGrid = new Grid<>();
         nameFilter = new TextField();
         addressFilter = new TextField();
-        doctorFilter = new ComboBox<>();
+        staffFilter = new ComboBox<>();
         departmentFilter = new ComboBox<>();
         appointmentGrid = new Grid<>();
         appointmentList = new ArrayList<>();
         appointmentBinder = new Binder<>();
-        doctorButtonLayout = new HorizontalLayout();
+        staffButtonLayout = new HorizontalLayout();
         staffBinder = new Binder<>();
 
         setMargin(false);
@@ -133,7 +142,7 @@ public class AdminView extends BaseView<AdminPresenter> {
 
     public void addMenuBarLayout(){
         patientDetails.setLabel("Patient Details");
-        doctorDetails.setLabel("Doctor Details");
+        staffDetails.setLabel("Staff details");
         addAppointment.setLabel("Add Appointment");
         appointmentDetails.setLabel("Appointment Details");
 
@@ -149,8 +158,8 @@ public class AdminView extends BaseView<AdminPresenter> {
         saveButton.getStyle().set("color", "white").set("background-color","green");
         cancelButton.getStyle().set("color","white").set("background-color","red");
 
-        tabsLayout.add(tabs, patientButtonLayout,appointmentButtonLayout,gridAndFieldsLayout);
-        tabs.add(patientDetails,doctorDetails,addAppointment,appointmentDetails);
+        tabsLayout.add(tabs, patientButtonLayout,appointmentButtonLayout, staffButtonLayout, gridAndFieldsLayout);
+        tabs.add(patientDetails, staffDetails,addAppointment,appointmentDetails);
         patientButtonLayout.add(addButton, editButton, deleteButton);
         gridAndFieldsLayout.add(patientGridLayout, patientFieldsLayout);
         add(tabsLayout);
@@ -162,32 +171,37 @@ public class AdminView extends BaseView<AdminPresenter> {
                 gridAndFieldsLayout.removeAll();
                 patientButtonLayout.setVisible(true);
                 appointmentButtonLayout.setVisible(false);
+                staffButtonLayout.setVisible(false);
                 gridAndFieldsLayout.add(patientGridLayout, patientFieldsLayout);
-            }else if(event.getSelectedTab().equals(doctorDetails)){
+            }else if(event.getSelectedTab().equals(staffDetails)){
+                staffButtonLayout.removeAll();
                 gridAndFieldsLayout.removeAll();
                 patientButtonLayout.setVisible(false);
                 appointmentButtonLayout.setVisible(false);
-                gridAndFieldsLayout.add(addDoctorDetails());
+                staffButtonLayout.setVisible(true);
+                gridAndFieldsLayout.add(addStaffDetails());
             }else if (event.getSelectedTab().equals(appointmentDetails)){
                 gridAndFieldsLayout.removeAll();
                 patientButtonLayout.setVisible(false);
                 appointmentButtonLayout.setVisible(true);
+                staffButtonLayout.setVisible(false);
                 gridAndFieldsLayout.add(appointmentGridLayout);
             }else if(event.getSelectedTab().equals(addAppointment)){
                 gridAndFieldsLayout.removeAll();
                 patientButtonLayout.setVisible(false);
                 appointmentButtonLayout.setVisible(false);
+                staffButtonLayout.setVisible(false);
                 gridAndFieldsLayout.add(appointmentFieldLayout);
             }
         });
 
-        addGridLayout();
-        addFieldLayout();
+        addPatientGridLayout();
+        addPatientFieldLayout();
         addAppointmentGridLayout();
         addAppointmentFieldLayout();
     }
 
-    public void addGridLayout(){
+    public void addPatientGridLayout(){
 
         allPatient = adminPresenter.getAllPatient();
         if(allPatient !=null) {
@@ -212,15 +226,15 @@ public class AdminView extends BaseView<AdminPresenter> {
 
         nameFilter.setPlaceholder("Name");
         addressFilter.setPlaceholder("Address");
-        doctorFilter.setPlaceholder("Doctor");
+        staffFilter.setPlaceholder("Doctor");
         departmentFilter.setPlaceholder("Department");
 
-        doctorFilter.setItemLabelGenerator(d ->{
+        staffFilter.setItemLabelGenerator(d ->{
             return d.getFirstName() + " " + d.getLastName();
         });
 
         if (adminPresenter.getAllDoctor()!=null) {
-            doctorFilter.setItems(adminPresenter.getAllDoctor());
+            staffFilter.setItems(adminPresenter.getAllDoctor());
         }
         if (adminPresenter.getAllDepartment()!=null) {
             departmentFilter.setItems(adminPresenter.getAllDepartment());
@@ -233,12 +247,12 @@ public class AdminView extends BaseView<AdminPresenter> {
 
         nameFilter.addValueChangeListener(e -> getPatientFilter());
         addressFilter.addValueChangeListener(e -> getPatientFilter());
-        doctorFilter.addValueChangeListener(e -> getPatientFilter());
+        staffFilter.addValueChangeListener(e -> getPatientFilter());
         departmentFilter.addValueChangeListener(e -> getPatientFilter());
 
         headerRow.getCell(nameColumn).setComponent(nameFilter);
         headerRow.getCell(addressColumn).setComponent(addressFilter);
-        headerRow.getCell(doctorNameColumn).setComponent(doctorFilter);
+        headerRow.getCell(doctorNameColumn).setComponent(staffFilter);
         headerRow.getCell(departmentColumn).setComponent(departmentFilter);
 
         patientGridLayout.add(patientGrid);
@@ -251,13 +265,13 @@ public class AdminView extends BaseView<AdminPresenter> {
             boolean b1 = e.getFullName().toLowerCase().contains(nameFilter.getValue().toLowerCase());
             boolean b2 = e.getAddress().toLowerCase().contains(addressFilter.getValue().toLowerCase());
             boolean b3 = e.getDoctor().getDepartment().getDeptName().equals((departmentFilter.getValue()==null) ? null : departmentFilter.getValue().getDeptName());
-            boolean b4 = e.getDoctor().getFirstName().equals(doctorFilter.getValue()==null ? null : doctorFilter.getValue().getFirstName())
-                    || e.getDoctor().getLastName().equals(doctorFilter.getValue() == null ? null : doctorFilter.getValue().getLastName());
+            boolean b4 = e.getDoctor().getFirstName().equals(staffFilter.getValue()==null ? null : staffFilter.getValue().getFirstName())
+                    || e.getDoctor().getLastName().equals(staffFilter.getValue() == null ? null : staffFilter.getValue().getLastName());
 
-            if(departmentFilter.getValue()== null || doctorFilter.getValue()==null){
-                if(departmentFilter.getValue()== null && doctorFilter.getValue()==null){
+            if(departmentFilter.getValue()== null || staffFilter.getValue()==null){
+                if(departmentFilter.getValue()== null && staffFilter.getValue()==null){
                     return b1 && b2;
-                }else if(doctorFilter.getValue()==null){
+                }else if(staffFilter.getValue()==null){
                     return b1 && b2 && b3;
                 }else {
                     return b1 && b2 && b4;
@@ -268,13 +282,13 @@ public class AdminView extends BaseView<AdminPresenter> {
 
     }
 
-    public void addFieldLayout(){
+    public void addPatientFieldLayout(){
 
         IntegerField idField = new IntegerField("Id");
         TextField addressField = new TextField("Address");
         IntegerField ageField = new IntegerField("Age");
         TextField nameField = new TextField("Name");
-        ComboBox<Staff> doctorComboBox = new ComboBox<>();
+        ComboBox<Staff> staffComboBox = new ComboBox<>();
         TextField mobileField = new TextField("Mobile Number");
         FormLayout formLayout = new FormLayout();
         cancelButton = new Button("Cancel");
@@ -286,16 +300,16 @@ public class AdminView extends BaseView<AdminPresenter> {
         saveButton.getStyle().set("color", "white").set("background-color","green");
         cancelButton.getStyle().set("color","white").set("background-color","red");
 
-        doctorComboBox.setLabel("Doctor");
+        staffComboBox.setLabel("Doctor");
         idField.setEnabled(false);
         addressField.setEnabled(false);
         ageField.setEnabled(false);
         nameField.setEnabled(false);
-        doctorComboBox.setEnabled(false);
+        staffComboBox.setEnabled(false);
         mobileField.setEnabled(false);
 
-        doctorComboBox.setItems(adminPresenter.getAllDoctor());
-        doctorComboBox.setItemLabelGenerator(d -> {
+        staffComboBox.setItems(adminPresenter.getAllDoctor());
+        staffComboBox.setItemLabelGenerator(d -> {
             return d.getFirstName() + " " + d.getLastName() + " (" + d.getDepartment().getDeptName() + ")";
         });
 
@@ -308,7 +322,7 @@ public class AdminView extends BaseView<AdminPresenter> {
                 .bind(Patient::getAge, Patient::setAge);
         patientBinder.forField(nameField).withValidator(s->!s.equals(""),"Please enter name")
                 .bind(Patient::getFullName, Patient::setFullName);
-        patientBinder.forField(doctorComboBox).withValidator(Objects::nonNull,"Please select")
+        patientBinder.forField(staffComboBox).withValidator(Objects::nonNull,"Please select")
                 .bind(Patient::getDoctor, Patient::setDoctor);
         patientBinder.forField(mobileField).withValidator(s-> s.length() == 10,"Please enter valid number")
                 .bind(Patient::getMobileNumber, Patient::setMobileNumber);
@@ -323,7 +337,7 @@ public class AdminView extends BaseView<AdminPresenter> {
             ageField.setEnabled(true);
             addressField.setEnabled(true);
             mobileField.setEnabled(true);
-            doctorComboBox.setEnabled(true);
+            staffComboBox.setEnabled(true);
         });
         editButton.addClickListener(event -> {
             Set<Patient> selectedItems = patientGrid.getSelectedItems();
@@ -335,7 +349,7 @@ public class AdminView extends BaseView<AdminPresenter> {
                 ageField.setEnabled(true);
                 addressField.setEnabled(true);
                 mobileField.setEnabled(true);
-                doctorComboBox.setEnabled(true);
+                staffComboBox.setEnabled(true);
             }else {
                 Notification notification = Notification.show("Please select patient", 3000, Notification.Position.TOP_CENTER);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -377,7 +391,7 @@ public class AdminView extends BaseView<AdminPresenter> {
                 ageField.setEnabled(false);
                 addressField.setEnabled(false);
                 mobileField.setEnabled(false);
-                doctorComboBox.setEnabled(false);
+                staffComboBox.setEnabled(false);
             }
         });
         cancelButton.addClickListener(event -> {
@@ -388,7 +402,7 @@ public class AdminView extends BaseView<AdminPresenter> {
             ageField.setEnabled(false);
             addressField.setEnabled(false);
             mobileField.setEnabled(false);
-            doctorComboBox.setEnabled(false);
+            staffComboBox.setEnabled(false);
         });
         deleteButton.addClickListener(event -> {
             Set<Patient> selectedItems = patientGrid.getSelectedItems();
@@ -407,22 +421,22 @@ public class AdminView extends BaseView<AdminPresenter> {
             }
         });
 
-        formLayout.add(idField, nameField, addressField,ageField, mobileField,doctorComboBox );
+        formLayout.add(idField, nameField, addressField,ageField, mobileField,staffComboBox );
         patientFieldsLayout.add(formLayout);
     }
 
-    public VerticalLayout addDoctorDetails(){
+    public VerticalLayout addStaffDetails(){
 
         VerticalLayout verticalLayout1 = new VerticalLayout();
-        Grid<Staff> doctorGrid = new Grid<>();
-        doctorGrid.setItems(adminPresenter.getAllDoctor());
-        Grid.Column<Staff> firstName = doctorGrid.addColumn(Staff::getFirstName).setHeader("First name");
-        Grid.Column<Staff> lastName = doctorGrid.addColumn(Staff::getLastName).setHeader("Last Name");
-        Grid.Column<Staff> education = doctorGrid.addColumn(Staff::getEducation).setHeader("Education");
-        Grid.Column<Staff> gender = doctorGrid.addColumn(Staff::getGender).setHeader("Gender");
-        Grid.Column<Staff> mobileNumber = doctorGrid.addColumn(Staff::getMobileNumber).setHeader("Mobile Number");
-        Grid.Column<Staff> bloodGroup = doctorGrid.addColumn(Staff::getBloodGroup).setHeader("Blood Group");
-        Grid.Column<Staff> department = doctorGrid.addColumn(e -> e.getDepartment().getDeptName()).setHeader("Department");
+        Grid<Staff> staffGrid = new Grid<>();
+        staffGrid.setItems(adminPresenter.getAllDoctor());
+        Grid.Column<Staff> firstName = staffGrid.addColumn(Staff::getFirstName).setHeader("First name");
+        Grid.Column<Staff> lastName = staffGrid.addColumn(Staff::getLastName).setHeader("Last Name");
+        Grid.Column<Staff> education = staffGrid.addColumn(Staff::getEducation).setHeader("Education");
+        Grid.Column<Staff> gender = staffGrid.addColumn(Staff::getGender).setHeader("Gender");
+        Grid.Column<Staff> mobileNumber = staffGrid.addColumn(Staff::getMobileNumber).setHeader("Mobile Number");
+        Grid.Column<Staff> bloodGroup = staffGrid.addColumn(Staff::getBloodGroup).setHeader("Blood Group");
+        Grid.Column<Staff> department = staffGrid.addColumn(e -> e.getDepartment().getDeptName()).setHeader("Department");
 
         TextField firstNameField = new TextField();
         TextField lastNameField = new TextField();
@@ -448,7 +462,7 @@ public class AdminView extends BaseView<AdminPresenter> {
         mobileField.setValueChangeMode(ValueChangeMode.LAZY);
         departmentField.setValueChangeMode(ValueChangeMode.LAZY);
 
-        HeaderRow headerRow = doctorGrid.appendHeaderRow();
+        HeaderRow headerRow = staffGrid.appendHeaderRow();
         headerRow.getCell(firstName).setComponent(firstNameField);
         headerRow.getCell(lastName).setComponent(lastNameField);
         headerRow.getCell(education).setComponent(educationField);
@@ -457,77 +471,110 @@ public class AdminView extends BaseView<AdminPresenter> {
         headerRow.getCell(bloodGroup).setComponent(bloodGroupField);
         headerRow.getCell(department).setComponent(departmentField);
 
-        verticalLayout1.add(doctorGrid);
+        verticalLayout1.add(staffGrid);
         verticalLayout1.setSizeFull();
 
-        firstNameField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
+        firstNameField.addValueChangeListener(event -> getStaffFilter(staffGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
-        lastNameField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
+        lastNameField.addValueChangeListener(event -> getStaffFilter(staffGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
-        genderField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
+        genderField.addValueChangeListener(event -> getStaffFilter(staffGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
-        bloodGroupField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
+        bloodGroupField.addValueChangeListener(event -> getStaffFilter(staffGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
-        departmentField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
+        departmentField.addValueChangeListener(event -> getStaffFilter(staffGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
-        educationField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
+        educationField.addValueChangeListener(event -> getStaffFilter(staffGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
-        mobileField.addValueChangeListener(event -> getDoctorFilter(doctorGrid,firstNameField,lastNameField,educationField,
+        mobileField.addValueChangeListener(event -> getStaffFilter(staffGrid,firstNameField,lastNameField,educationField,
                 genderField,mobileField,bloodGroupField,departmentField));
 
         Button addButton = new Button("Add");
         Button editButton = new Button("Edit");
         Button deleteButton = new Button("Delete");
+        Dialog dialog = new Dialog();
+        FormLayout formLayout = new FormLayout();
+        IntegerField id = new IntegerField("Staff Id");
+        TextField fName = new TextField("First Name");
+        TextField lName = new TextField("Last Name");
+        DatePicker dob = new DatePicker("Date of Birth");
+        ComboBox<String> edu = new ComboBox<>("Education");
+        RadioButtonGroup<String> genderF= new RadioButtonGroup<>();
+        TextField mob = new TextField("Mobile Number");
+        ComboBox<String> bg = new ComboBox<>("Blood Group");
+        ComboBox<Department> dept = new ComboBox<>("Department");
+        ComboBox<String> designation = new ComboBox<>("Designation");
+        ComboBox<String> maritalStatus = new ComboBox<>("Marital Status");
+        DatePicker joining = new DatePicker("Joining Date");
+//            RadioButtonGroup<String> isWorking = new RadioButtonGroup<>();
+        Checkbox isWorking = new Checkbox("Is working");
+        DatePicker leavingDate = new DatePicker("Leaving date");
+        TextField userName = new TextField("Username");
+        TextField password = new TextField("Password");
+        Button save = new Button("Save");
+        Button cancel = new Button("Cancel");
+
+        genderF.setLabel("Gender");
+
+
+        id.setEnabled(false);
+        genderF.setItems("Male", "Female");
+        edu.setItems("B.Pharmacy", "D.Pharmacy", "M.B.B.S", "B.H.M.S", "B.A.M.S", "HSC", "SSC",
+                "B.Tech", "B.Sc", "B.Com", "B.A", "M.D");
+        bg.setItems("A +ve", "A -ve", "B +ve", "B -ve", "AB +ve", "AB -ve", "O +ve", "O -ve");
+        dept.setItems(adminPresenter.getAllDepartment());
+        dept.setItemLabelGenerator(Department::getDeptName);
+        designation.setItems("Doctor", "Nurse", "Receptionist","Helper", "Pharmacist", "Admin");
+        maritalStatus.setItems("Single", "Married", "Divorced");
+        addButton.getStyle().set("color", "white").set("background-color","green");
+        editButton.getStyle().set("color", "white").set("background-color","blue");
+        deleteButton.getStyle().set("color", "white").set("background-color","red");
+        save.getStyle().set("color", "white").set("background-color","green");
+        cancel.getStyle().set("color","white").set("background-color","red");
+        dialog.setWidth(40, Unit.PERCENTAGE);
+
+        staffBinder.forField(id).bind(Staff::getId,Staff::setId);
+        staffBinder.forField(fName).withValidator(s -> !s.equals(""),"Enter first name").bind(Staff::getFirstName, Staff::setFirstName);
+        staffBinder.forField(lName).withValidator(s -> !s.equals(""),"Enter last name").bind(Staff::getLastName, Staff::setLastName);
+        staffBinder.forField(dob).withValidator(s -> dob.getValue()!=null,"Enter date of birth").bind(Staff::getDateOfBirth, Staff::setDateOfBirth);
+        staffBinder.forField(edu).withValidator(Objects::nonNull,"Enter education").bind(Staff::getEducation,Staff::setEducation);
+        staffBinder.forField(bg).withValidator(Objects::nonNull,"Select blood group").bind(Staff::getBloodGroup,Staff::setBloodGroup);
+        staffBinder.forField(genderF).withValidator(Objects::nonNull,"select gender").bind(Staff::getGender,Staff::setGender);
+        staffBinder.forField(mob).withValidator(s -> !s.equals(""),"Enter mobile number").bind(Staff::getMobileNumber,Staff::setMobileNumber);
+        staffBinder.forField(dept).withValidator(Objects::nonNull,"Select department").bind(Staff::getDepartment, Staff::setDepartment);
+        staffBinder.forField(designation).withValidator(Objects::nonNull,"Select designation").bind(Staff::getDesignation, Staff::setDesignation);
+        staffBinder.forField(maritalStatus).withValidator(Objects::nonNull,"Select marital status").bind(Staff::getMaritalStatus, Staff::setMaritalStatus);
+        staffBinder.forField(joining).withValidator(Objects::nonNull,"Select joining date").bind(Staff::getJoiningDate, Staff::setJoiningDate);
+        staffBinder.forField(isWorking).withValidator(Objects::nonNull,"Select").bind(Staff::getIsWorking,Staff::setIsWorking);
+        staffBinder.forField(leavingDate).bind(Staff::getLeavingDate,Staff::setLeavingDate);
+        staffBinder.forField(userName).withValidator(s -> !s.equals("") && !adminPresenter.checkUsername(userName.getValue()),"username not available")
+                .bind(Staff::getUserName, Staff::setUserName);
+        staffBinder.forField(password).withValidator(s -> s.length()>=6,"Enter password greater than 6 character")
+                .bind(Staff::getPassword, Staff::setPassword);
+
+        staffButtonLayout.add(addButton,editButton,deleteButton);
+        formLayout.add(id, fName, lName, dob, edu, genderF, bg, mob, dept, designation, maritalStatus, joining, isWorking, leavingDate, userName, password, save, cancel);
+        formLayout.setColspan(save,2);
+        formLayout.setColspan(cancel,2);
+        dialog.add(formLayout);
 
         addButton.addClickListener(event -> {
-            Dialog dialog = new Dialog();
-            FormLayout formLayout = new FormLayout();
-            TextField fName = new TextField("First Name");
-            TextField lName = new TextField("Last Name");
-            DatePicker dob = new DatePicker("Date of Birth");
-            ComboBox<String> edu = new ComboBox<>("Education");
-            RadioButtonGroup<String> genderF= new RadioButtonGroup<>();
-            TextField mob = new TextField("Mobile");
-            ComboBox<String> bg = new ComboBox<>("Blood Group");
-            ComboBox<String> dept = new ComboBox<>("Department");
-            ComboBox<String> designation = new ComboBox<>("Designaion");
-            ComboBox<String> maritalStatus = new ComboBox<>("Marital Status");
-            DatePicker joining = new DatePicker("Joining Date");
-            RadioButtonGroup<String> isWorking = new RadioButtonGroup<>();
-            DatePicker leavingDate = new DatePicker();
-            TextField userName = new TextField();
-            TextField password = new TextField();
-
-            genderF.setItems("Male", "Female");
-            edu.setItems("B.Pharmacy", "D.Pharmacy", "M.B.B.S", "B.H.M.S", "B.A.M.S", "HSC", "SSC",
-                    "B.Tech", "B.Sc", "B.Com", "B.A", "M.D");
-            bg.setItems("A +ve", "A -ve", "B +ve", "B -ve", "AB +ve", "AB -ve", "O +ve", "O -ve");
-            dept.setItems("General", "Dental", "Accidental", "Surgery", "Cardiology", "Psychology");
-            designation.setItems("Doctor", "Nurse", "Receptionist","Helper", "Pharmacist");
-            maritalStatus.setItems("Single", "Married", "Divorced");
-            isWorking.setItems("true", "false");
-
-            staffBinder.forField(fName).withValidator(s -> !s.equals(""),"Enter first name");
-            staffBinder.forField(lName).withValidator(s -> !s.equals(""),"Enter lsat name");
-            staffBinder.forField(dob).withValidator(s -> dob.getValue()!=null,"Enter date of Birth");
-            staffBinder.forField(edu).withValidator(Objects::nonNull,"Enter education");
-            staffBinder.forField(genderF).withValidator(s -> !s.equals(""),"select gender");
-            staffBinder.forField(fName).withValidator(s -> !s.equals(""),"Enter first name");
-            staffBinder.forField(fName).withValidator(s -> !s.equals(""),"Enter first name");
-
-
-
-
-
+            adminPresenter.addStaff(staffBinder, dialog, save, cancel);
+        });
+        editButton.addClickListener(event -> {
+            adminPresenter.editStaff(staffGrid, staffBinder, id.getValue(), dialog, save, cancel);
+        });
+        deleteButton.addClickListener(event -> {
+            adminPresenter.deleteStaff(staffGrid);
         });
 
         return verticalLayout1;
     }
 
-    public void getDoctorFilter(Grid<Staff> doctorGrid, TextField firstnameField, TextField lastNameField, TextField educationField, TextField genderField,
-                                TextField mobileField, TextField bloodGroupField, TextField departmentField){
+    public void getStaffFilter(Grid<Staff> staffGrid, TextField firstnameField, TextField lastNameField, TextField educationField, TextField genderField,
+                               TextField mobileField, TextField bloodGroupField, TextField departmentField){
 
-        ListDataProvider<Staff> dataProvider = (ListDataProvider)doctorGrid.getDataProvider();
+        ListDataProvider<Staff> dataProvider = (ListDataProvider)staffGrid.getDataProvider();
         dataProvider.setFilter(e -> {
 
             Boolean b1 = e.getFirstName().toLowerCase().contains(firstnameField.getValue().toLowerCase());

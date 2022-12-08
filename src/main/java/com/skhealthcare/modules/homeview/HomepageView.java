@@ -36,7 +36,7 @@ public class HomepageView extends BaseView<HomepagePresenter> {
     Button doctorLoginButton;
     Button login;
 
-    @PostConstruct
+    @Override
     public void init(){
 
         verticalLayout = new VerticalLayout();

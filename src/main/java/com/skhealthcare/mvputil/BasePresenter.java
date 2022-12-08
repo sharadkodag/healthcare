@@ -1,7 +1,24 @@
 package com.skhealthcare.mvputil;
 
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
 
-public class BasePresenter<V extends View> implements Presenter<V> {
+public abstract class BasePresenter<V extends View> implements Presenter<V> {
 
+    V view;
+
+    @Override
+    public V getView() {
+        return view;
+    }
+
+    @Override
+    public void setView(V view) {
+        this.view = view;
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+
+    }
 }

@@ -17,7 +17,7 @@ public class Staff {
 
     @Id
     @SequenceGenerator(name = "sr", sequenceName = "sr", initialValue = 101, allocationSize = 1)
-    @GeneratedValue(generator = "sr",strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(generator = "sr", strategy = GenerationType.SEQUENCE)
     @EqualsAndHashCode.Include
     private Integer id;
     private String firstName;

@@ -16,7 +16,7 @@ public class Appointment {
 
     @Id
     @SequenceGenerator(name = "no", sequenceName = "no", initialValue = 1, allocationSize = 1)
-    @GeneratedValue(generator = "no",strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(generator = "no", strategy = GenerationType.SEQUENCE)
     private Integer id;
     private String name;
     private String address;

@@ -9,6 +9,7 @@ import com.skhealthcare.service.StaffService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,22 +23,25 @@ public class HomepagePresenter extends BasePresenter<HomepageView> {
     public void checkUserAndLogin(String text, String username, String password, Button login){
         Staff staff = service.checkStaff(text, username, password);
         Notification validUser = Notification.show("Successfully Login", 3000, Notification.Position.TOP_CENTER);
+        validUser.setOpened(false);
         validUser.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
         if(staff!=null) {
             if(text.equals("Doctor")){
+                VaadinSession.getCurrent().setAttribute("Doctor",staff);
                 login.getUI().ifPresent(e -> e.navigate(DoctorLoginView.class));
                 validUser.setOpened(true);
             } else if (text.equals("Admin")) {
+                VaadinSession.getCurrent().setAttribute("Admin",staff);
                 login.getUI().ifPresent(e -> e.navigate(AdminView.class));
                 validUser.setOpened(true);
             } else if (text.equals("Receptionist")) {
+                VaadinSession.getCurrent().setAttribute("Receptionist",staff);
                 login.getUI().ifPresent(e -> e.navigate(ReceptionistView.class));
                 validUser.setOpened(true);
             } else {
                 Notification.show("Invalid User. Contact Admin");
             }
-
 
         }else {
             Notification invalidUser = Notification.show("Invalid User", 3000, Notification.Position.TOP_CENTER);

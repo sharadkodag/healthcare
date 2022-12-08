@@ -19,4 +19,9 @@ public class DepartmentServiceImpl implements DepartmentService{
         return departmentRepository.findAll();
     }
 
+    @Override
+    public Department getDepartmentByName(String deptName) {
+        return departmentRepository.findByDeptName(deptName);
+    }
+
 }

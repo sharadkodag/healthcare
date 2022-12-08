@@ -4,11 +4,14 @@ import com.skhealthcare.entity.Appointment;
 import com.skhealthcare.entity.Department;
 import com.skhealthcare.entity.Staff;
 import com.skhealthcare.entity.Patient;
+import com.skhealthcare.modules.homeview.HomepageView;
 import com.skhealthcare.mvputil.BasePresenter;
 import com.skhealthcare.service.AppointmentService;
 import com.skhealthcare.service.DepartmentService;
 import com.skhealthcare.service.StaffService;
 import com.skhealthcare.service.PatientService;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +33,17 @@ public class ReceptionistPresenter extends BasePresenter<ReceptionistView> {
 
     @Autowired
     AppointmentService appointmentService;
+
+    public void beforeEnter(BeforeEnterEvent observer){
+        Staff staff = (Staff) VaadinSession.getCurrent().getAttribute("Receptionist");
+        if(staff!=null){
+            if(staff.getDesignation().equals("Receptionist")){
+                observer.forwardTo(ReceptionistView.class);
+            }
+        }else {
+            observer.forwardTo(HomepageView.class);
+        }
+    }
 
     public List<Patient> getAllPatient(){
         return patientService.getAllPatient();

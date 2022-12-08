@@ -15,4 +15,5 @@ public interface AppointmentService {
 
     public Appointment getAppointmentById(Integer id);
 
+    public List<Appointment> getAllAppointmentForDoctor();
 }

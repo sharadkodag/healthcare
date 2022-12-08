@@ -4,6 +4,7 @@ import com.skhealthcare.entity.Appointment;
 import com.skhealthcare.entity.Department;
 import com.skhealthcare.entity.Staff;
 import com.skhealthcare.entity.Patient;
+import com.skhealthcare.modules.homeview.HomepageView;
 import com.skhealthcare.modules.homeview.Template;
 import com.skhealthcare.mvputil.BaseView;
 import com.vaadin.flow.component.Unit;
@@ -25,7 +26,9 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +47,6 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
     VerticalLayout tabsLayout;
     HorizontalLayout buttonLayout;
     HorizontalLayout gridAndFieldsLayout;
-
     VerticalLayout patientGridLayout;
     VerticalLayout patientFieldsLayout;
     VerticalLayout appointmentGridLayout;
@@ -68,7 +70,12 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
     List<Appointment> appointmentList;
     Binder<Appointment> appointmentBinder;
 
-    @PostConstruct
+    @Override
+    public void beforeEnter(BeforeEnterEvent observer){
+        getPresenter().beforeEnter(observer);
+    }
+
+    @Override
     public void init(){
         tabsLayout = new VerticalLayout();
         tabs = new Tabs();
@@ -156,7 +163,7 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
 
     public void addPatientGridLayout(){
 
-        allPatient = doctorLoginPresenter.getAllPatient();
+        allPatient = doctorLoginPresenter.getAllPatientForDoctor();
         if(allPatient !=null) {
             patientGrid.setItems(allPatient);
         }
@@ -381,18 +388,18 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
 
     public VerticalLayout addAppointmentGridLayout(){
 
-        appointmentList = doctorLoginPresenter.getAllAppointment();
+        appointmentList = doctorLoginPresenter.getAllAppointmentForDoctor();
         if(allPatient !=null) {
             appointmentGrid.setItems(appointmentList);
         }
         Grid.Column<Appointment> idColumn = appointmentGrid.addColumn(Appointment::getId).setHeader("Id");
         Grid.Column<Appointment> nameColumn = appointmentGrid.addColumn(Appointment::getName).setHeader("Name");
-        Grid.Column<Appointment> doctorNameColumn = appointmentGrid.addColumn(p ->{
-            return p.getDoctor().getFirstName() + " " + p.getDoctor().getLastName();
-        }).setHeader("Doctor Name");
-        Grid.Column<Appointment> departmentColumn = appointmentGrid.addColumn(p -> {
-            return p.getDoctor().getDepartment().getDeptName();
-        }).setHeader("Department");
+//        Grid.Column<Appointment> doctorNameColumn = appointmentGrid.addColumn(p ->{
+//            return p.getDoctor().getFirstName() + " " + p.getDoctor().getLastName();
+//        }).setHeader("Doctor Name");
+//        Grid.Column<Appointment> departmentColumn = appointmentGrid.addColumn(p -> {
+//            return p.getDoctor().getDepartment().getDeptName();
+//        }).setHeader("Department");
         Grid.Column<Appointment> addressColumn = appointmentGrid.addColumn(Appointment::getAddress).setHeader("Address");
         Grid.Column<Appointment> ageColumn = appointmentGrid.addColumn(Appointment::getAge).setHeader("Age");
         Grid.Column<Appointment> descriptionColumn = appointmentGrid.addColumn(Appointment::getDescription).setHeader("Description");
@@ -409,8 +416,8 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
 
         TextField idFilter = new TextField();
         TextField nameFilter = new TextField();
-        ComboBox<Staff> doctorFilter = new ComboBox<>();
-        ComboBox<Department> departmentFilter = new ComboBox<>();
+//        ComboBox<Staff> doctorFilter = new ComboBox<>();
+//        ComboBox<Department> departmentFilter = new ComboBox<>();
         TextField addressFilter = new TextField();
         TextField ageFilter = new TextField();
         TextField descriptionFilter = new TextField();
@@ -421,22 +428,22 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
         addressFilter.setPlaceholder("Address");
         ageFilter.setPlaceholder("Age");
         descriptionFilter.setPlaceholder("Description");
-        doctorFilter.setPlaceholder("Doctor");
-        departmentFilter.setPlaceholder("Department");
+//        doctorFilter.setPlaceholder("Doctor");
+//        departmentFilter.setPlaceholder("Department");
         timeFilter.setPlaceholder("Time");
 
-        doctorFilter.setItemLabelGenerator(d ->{
-            return d.getFirstName() + " " + d.getLastName();
-        });
+//        doctorFilter.setItemLabelGenerator(d ->{
+//            return d.getFirstName() + " " + d.getLastName();
+//        });
+//
+//        if (doctorLoginPresenter.getAllDoctor()!=null) {
+//            doctorFilter.setItems(doctorLoginPresenter.getAllDoctor());
+//        }
+//        if (doctorLoginPresenter.getAllDepartment()!=null) {
+//            departmentFilter.setItems(doctorLoginPresenter.getAllDepartment());
+//        }
 
-        if (doctorLoginPresenter.getAllDoctor()!=null) {
-            doctorFilter.setItems(doctorLoginPresenter.getAllDoctor());
-        }
-        if (doctorLoginPresenter.getAllDepartment()!=null) {
-            departmentFilter.setItems(doctorLoginPresenter.getAllDepartment());
-        }
-
-        departmentFilter.setItemLabelGenerator(Department::getDeptName);
+//        departmentFilter.setItemLabelGenerator(Department::getDeptName);
 
         idFilter.setValueChangeMode(ValueChangeMode.LAZY);
         nameFilter.setValueChangeMode(ValueChangeMode.LAZY);
@@ -455,10 +462,10 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
                 nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
         addressFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
                 nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
-        doctorFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
-                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
-        departmentFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
-                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
+//        doctorFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
+//                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
+//        departmentFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
+//                nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
         timeFilter.addValueChangeListener(e -> getAppointmentFilter(idFilter, ageFilter, descriptionFilter,
                 nameFilter, addressFilter, doctorFilter, departmentFilter, timeFilter));
 
@@ -468,8 +475,8 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
         headerRow.getCell(descriptionColumn).setComponent(descriptionFilter);
         headerRow.getCell(nameColumn).setComponent(nameFilter);
         headerRow.getCell(addressColumn).setComponent(addressFilter);
-        headerRow.getCell(doctorNameColumn).setComponent(doctorFilter);
-        headerRow.getCell(departmentColumn).setComponent(departmentFilter);
+//        headerRow.getCell(doctorNameColumn).setComponent(doctorFilter);
+//        headerRow.getCell(departmentColumn).setComponent(departmentFilter);
 
         appointmentGridLayout.add(appointmentGrid);
 
@@ -488,20 +495,20 @@ public class DoctorLoginView extends BaseView<DoctorLoginPresenter> {
             boolean b2 = e.getDescription().toLowerCase().contains(descriptionFilter.getValue().toLowerCase());
             boolean b1 = e.getName().toLowerCase().contains(nameFilter.getValue().toLowerCase());
             boolean b7 = e.getAddress().toLowerCase().contains(addressFilter.getValue().toLowerCase());
-            boolean b4 = e.getDoctor().getFirstName().equals(doctorFilter.getValue()==null?"":doctorFilter.getValue().getFirstName());
+//            boolean b4 = e.getDoctor().getFirstName().equals(doctorFilter.getValue()==null?"":doctorFilter.getValue().getFirstName());
             boolean b8 = e.getTime().contains(timeFilter.getValue());
-            boolean b3 = e.getDoctor().getDepartment().getDeptName().equals(departmentFilter.getValue()==null?"":departmentFilter.getValue().getDeptName());
+//            boolean b3 = e.getDoctor().getDepartment().getDeptName().equals(departmentFilter.getValue()==null?"":departmentFilter.getValue().getDeptName());
 
-            if(departmentFilter.getValue()== null|| doctorFilter.getValue()== null ){
-                if(departmentFilter.getValue()== null && doctorFilter.getValue()== null ){
-                    return b1 && b2 && b5 && b6 && b7 && b8;
-                }else if(doctorFilter.getValue()== null){
-                    return b1 && b2 && b3 && b6 && b5  && b7 && b8;
-                }  else {
-                    return b1 && b2 && b4 && b5 && b6 && b7 && b8;
-                }
-            }
-            return b1 && b2 && b3 && b4 && b6 && b5 && b7 && b8;
+//            if(departmentFilter.getValue()== null|| doctorFilter.getValue()== null ){
+//                if(departmentFilter.getValue()== null && doctorFilter.getValue()== null ){
+//                    return b1 && b2 && b5 && b6 && b7 && b8;
+//                }else if(doctorFilter.getValue()== null){
+//                    return b1 && b2 && b3 && b6 && b5  && b7 && b8;
+//                }  else {
+//                    return b1 && b2 && b4 && b5 && b6 && b7 && b8;
+//                }
+//            }
+            return b1 && b2 && b6 && b5 && b7 && b8;
         });
 
     }

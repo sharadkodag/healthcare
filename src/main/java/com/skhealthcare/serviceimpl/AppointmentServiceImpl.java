@@ -1,8 +1,10 @@
 package com.skhealthcare.serviceimpl;
 
 import com.skhealthcare.entity.Appointment;
+import com.skhealthcare.entity.Staff;
 import com.skhealthcare.repository.AppointmentRepository;
 import com.skhealthcare.service.AppointmentService;
+import com.vaadin.flow.server.VaadinSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,5 +34,11 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public Appointment getAppointmentById(Integer id) {
         return appointmentRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public List<Appointment> getAllAppointmentForDoctor() {
+        Staff doctor = (Staff) VaadinSession.getCurrent().getAttribute("Doctor");
+        return appointmentRepository.findAllByDoctor(doctor);
     }
 }

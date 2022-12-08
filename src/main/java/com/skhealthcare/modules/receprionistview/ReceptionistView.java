@@ -4,6 +4,7 @@ import com.skhealthcare.entity.Appointment;
 import com.skhealthcare.entity.Department;
 import com.skhealthcare.entity.Staff;
 import com.skhealthcare.entity.Patient;
+import com.skhealthcare.modules.homeview.HomepageView;
 import com.skhealthcare.modules.homeview.Template;
 import com.skhealthcare.mvputil.BaseView;
 import com.vaadin.flow.component.Unit;
@@ -25,7 +26,10 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +75,12 @@ public class ReceptionistView extends BaseView<ReceptionistPresenter> {
     List<Appointment> appointmentList;
     Binder<Appointment> appointmentBinder;
 
-    @PostConstruct
+    @Override
+    public void beforeEnter(BeforeEnterEvent observer){
+        getPresenter().beforeEnter(observer);
+    }
+
+    @Override
     public void init(){
         tabsLayout = new VerticalLayout();
         tabs = new Tabs();
