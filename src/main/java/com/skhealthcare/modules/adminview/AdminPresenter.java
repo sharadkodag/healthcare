@@ -103,9 +103,7 @@ public class AdminPresenter extends BasePresenter<AdminView> {
         dialog.open();
         save.addClickListener(event -> {
             staffBinder.validate();
-            System.out.println("inside save");
             if(staffBinder.isValid()){
-                System.out.println("inside valid");
                 Staff staff = new Staff();
                 try {
                     staffBinder.writeBean(staff);

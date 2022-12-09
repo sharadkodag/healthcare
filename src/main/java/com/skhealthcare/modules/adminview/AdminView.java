@@ -562,6 +562,12 @@ public class AdminView extends BaseView<AdminPresenter> {
             adminPresenter.addStaff(staffBinder, dialog, save, cancel);
         });
         editButton.addClickListener(event -> {
+            Set<Staff> staffSet = staffGrid.getSelectedItems();
+            Staff next = new Staff();
+            if(staffSet.size()>0) {
+                next = staffSet.iterator().next();
+            }
+            staffBinder.setBean(next);
             adminPresenter.editStaff(staffGrid, staffBinder, id.getValue(), dialog, save, cancel);
         });
         deleteButton.addClickListener(event -> {
@@ -608,13 +614,14 @@ public class AdminView extends BaseView<AdminPresenter> {
         Grid.Column<Appointment> descriptionColumn = appointmentGrid.addColumn(Appointment::getDescription).setHeader("Description");
         Grid.Column<Appointment> timeColumn = appointmentGrid.addColumn(Appointment::getTime).setHeader("Time");
 
-
         HeaderRow headerRow = appointmentGrid.appendHeaderRow();
 
         appointmentGrid.addSelectionListener(event -> {
             Set<Appointment> allSelectedItems = event.getAllSelectedItems();
             Iterator<Appointment> iterator = allSelectedItems.iterator();
-            appointmentBinder.readBean(iterator.next());
+            if(allSelectedItems.size()>0) {
+                appointmentBinder.readBean(iterator.next());
+            }
         });
 
         TextField idFilter = new TextField();
@@ -824,6 +831,9 @@ public class AdminView extends BaseView<AdminPresenter> {
                 }
                 if(!idField.isEmpty()){
                     Appointment appointmentById = adminPresenter.getAppointmentById(idField.getValue());
+                    if(appointmentById == null){
+                        appointmentById = new Appointment();
+                    }
                     try {
                         appointmentBinder.writeBean(appointmentById);
                         adminPresenter.addAppointment(appointmentById);
@@ -857,6 +867,7 @@ public class AdminView extends BaseView<AdminPresenter> {
         });
         cancelButton.addClickListener(event -> {
             appointmentBinder.removeBean();
+
         });
         deleteButton.addClickListener(event -> {
             Set<Appointment> selectedItems = appointmentGrid.getSelectedItems();
