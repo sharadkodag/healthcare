@@ -18,4 +18,6 @@ public interface StaffService {
     public Staff getStaffById(Integer id);
 
     public void deleteStaff(Staff staff);
+
+    public List<Staff> getAllStaff();
 }

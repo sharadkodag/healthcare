@@ -58,39 +58,30 @@ public class AdminPresenter extends BasePresenter<AdminView> {
     public List<Patient> getAllPatient(){
         return patientService.getAllPatient();
     }
-
     public List<Staff> getAllDoctor(){
         return staffService.getAllDoctors("Doctor");
     }
-
     public List<Department> getAllDepartment(){
         return departmentService.getAllDepartment();
     }
-
     public void addPatient(Patient patient){
         patientService.addPatient(patient);
     }
-
     public void deletePatient(Patient patient){
         patientService.deletePatient(patient);
     }
-
     public Patient getPatientById(Integer id){
         return patientService.getPatientById(id);
     }
-
     public List<Appointment> getAllAppointment(){
         return appointmentService.getAllAppointment();
     }
-
     public void addAppointment(Appointment appointment){
         appointmentService.addAppointment(appointment);
     }
-
     public void deleteAppointment(Appointment appointment){
         appointmentService.deleteAppointment(appointment);
     }
-
     public Appointment getAppointmentById(Integer id){
         return appointmentService.getAppointmentById(id);
     }
@@ -156,6 +147,10 @@ public class AdminPresenter extends BasePresenter<AdminView> {
             Notification show = Notification.show("Please select staff", 3000, Notification.Position.TOP_CENTER);
             show.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
+    }
+
+    public List<Staff> getAllStaff(){
+        return staffService.getAllStaff();
     }
 
     public Department getDepartmentByName(String deptName){

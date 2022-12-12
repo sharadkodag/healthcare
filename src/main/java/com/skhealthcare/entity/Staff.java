@@ -41,17 +41,29 @@ public class Staff {
     @OneToMany(mappedBy = "doctor")
     List<Appointment> appointmentList;
 
+//    @Override
+//    public boolean equals(Object o) {
+//        if (this == o) return true;
+//        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+//        Staff doctor = (Staff) o;
+//        return id != null && Objects.equals(id, doctor.id);
+//    }
+//
+//    @Override
+//    public int hashCode() {
+//        return getClass().hashCode();
+//    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        Staff doctor = (Staff) o;
-        return id != null && Objects.equals(id, doctor.id);
+        Staff staff = (Staff) o;
+        return id != null && Objects.equals(id, staff.id);
     }
 
     @Override
     public int hashCode() {
         return getClass().hashCode();
     }
-
 }

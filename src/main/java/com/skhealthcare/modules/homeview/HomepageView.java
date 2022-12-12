@@ -117,8 +117,4 @@ public class HomepageView extends BaseView<HomepagePresenter> {
         dialog.add(formLayout);
 
     }
-
-
-
-
 }

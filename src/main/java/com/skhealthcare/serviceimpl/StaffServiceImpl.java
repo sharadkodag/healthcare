@@ -45,4 +45,9 @@ public class StaffServiceImpl implements StaffService {
         staffRepository.delete(staff);
     }
 
+    @Override
+    public List<Staff> getAllStaff() {
+        return staffRepository.findAll();
+    }
+
 }
